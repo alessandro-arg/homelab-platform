@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, status
+from fastapi import Depends, FastAPI, HTTPException, status
 
 from internship_tracker.models import Application, ApplicationCreate
 from internship_tracker.repository import ApplicationRepository
@@ -28,8 +28,8 @@ def health_check() -> dict[str, str]:
 def create_application(
     application_data: ApplicationCreate,
     application_repository: Annotated[
-	ApplicationRepository,
-	Depends(get_repository),
+        ApplicationRepository,
+        Depends(get_repository),
     ],
 ) -> Application:
     return application_repository.create(application_data)
@@ -46,3 +46,25 @@ def list_applications(
     ],
 ) -> list[Application]:
     return application_repository.list_all()
+
+
+@app.get(
+    "/applications/{application_id}",
+    response_model=Application,
+)
+def get_application(
+    application_id: int,
+    application_repository: Annotated[
+        ApplicationRepository,
+        Depends(get_repository),
+    ],
+) -> Application:
+    application = application_repository.get_by_id(application_id)
+
+    if application is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found",
+        )
+
+    return application

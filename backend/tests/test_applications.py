@@ -57,11 +57,11 @@ def test_list_applications_returns_created_applications(
 ) -> None:
     creation_response = client.post(
         "/applications",
-	json={
-	    "company_name": "Example GmbH",
-	    "status": "applied",
-	    "application_date": "2026-08-02",
-	},
+        json={
+            "company_name": "Example GmbH",
+            "status": "applied",
+            "application_date": "2026-08-02",
+        },
     )
 
     assert creation_response.status_code == 201
@@ -76,3 +76,32 @@ def test_list_applications_returns_created_applications(
     assert applications[0]["id"] == 1
     assert applications[0]["company_name"] == "Example GmbH"
     assert applications[0]["status"] == "applied"
+
+
+def test_get_application_by_id(client: TestClient) -> None:
+    creation_response = client.post(
+        "/applications",
+        json={
+            "company_name": "Example GmbH",
+            "status": "applied",
+            "application_date": "2026-08-02",
+        },
+    )
+
+    assert creation_response.status_code == 201
+
+    application_id = creation_response.json()["id"]
+    response = client.get(f"/applications/{application_id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == application_id
+    assert response.json()["company_name"] == "Example GmbH"
+
+
+def test_get_unknown_application_returns_404(
+    client: TestClient,
+) -> None:
+    response = client.get("/applications/999")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Application not found"}

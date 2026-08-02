@@ -19,3 +19,6 @@ class ApplicationRepository:
 
     def list_all(self) -> list[Application]:
         return list(self._applications.values())
+
+    def get_by_id(self, application_id: int) -> Application | None:
+        return self._applications.get(application_id)
