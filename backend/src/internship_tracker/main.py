@@ -68,3 +68,29 @@ def get_application(
         )
 
     return application
+
+
+@app.put(
+    "/applications/{application_id}",
+    response_model=Application,
+)
+def update_application(
+    application_id: int,
+    application_data: ApplicationCreate,
+    application_repository: Annotated[
+        ApplicationRepository,
+        Depends(get_repository),
+    ],
+) -> Application:
+    application = application_repository.update(
+        application_id,
+        application_data,
+    )
+
+    if application is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found",
+        )
+
+    return application

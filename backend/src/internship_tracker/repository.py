@@ -22,3 +22,20 @@ class ApplicationRepository:
 
     def get_by_id(self, application_id: int) -> Application | None:
         return self._applications.get(application_id)
+
+    def update(
+        self,
+        application_id: int,
+        application_data: ApplicationCreate,
+    ) -> Application | None:
+        if application_id not in self._applications:
+            return None
+
+        application = Application(
+            id=application_id,
+            **application_data.model_dump(),
+        )
+
+        self._applications[application_id] = application
+
+        return application

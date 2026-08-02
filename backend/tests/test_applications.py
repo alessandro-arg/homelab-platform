@@ -105,3 +105,62 @@ def test_get_unknown_application_returns_404(
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Application not found"}
+
+
+def test_update_application(client: TestClient) -> None:
+    creation_response = client.post(
+        "/applications",
+        json={
+            "company_name": "Example GmbH",
+            "status": "applied",
+            "application_date": "2026-08-02",
+            "contact_person": "Max Mustermann",
+        },
+    )
+
+    assert creation_response.status_code == 201
+
+    application_id = creation_response.json()["id"]
+
+    response = client.put(
+        f"/applications/{application_id}",
+        json={
+            "company_name": "Updated GmbH",
+            "position_title": "Backend Developer",
+            "status": "interview",
+            "application_date": "2026-08-02",
+            "notes": "Invited to a technical interview.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_data = response.json()
+
+    assert response_data["id"] == application_id
+    assert response_data["company_name"] == "Updated GmbH"
+    assert response_data["position_title"] == "Backend Developer"
+    assert response_data["status"] == "interview"
+    assert response_data["contact_person"] is None
+    assert response_data["notes"] == "Invited to a technical interview."
+
+    get_response = client.get(f"/applications/{application_id}")
+
+    assert get_response.status_code == 200
+    assert get_response.json() == response_data
+
+
+def test_update_unknown_application_returns_404(
+    client: TestClient,
+) -> None:
+    response = client.put(
+        "/applications/999",
+        json={
+            "company_name": "Example GmbH",
+            "status": "applied",
+            "application_date": "2026-08-02",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Application not found"}
