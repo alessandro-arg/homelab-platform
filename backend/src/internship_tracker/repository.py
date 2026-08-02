@@ -16,3 +16,6 @@ class ApplicationRepository:
         self._next_id += 1
 
         return application
+
+    def list_all(self) -> list[Application]:
+        return list(self._applications.values())

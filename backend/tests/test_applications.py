@@ -41,3 +41,38 @@ def test_create_application(client: TestClient) -> None:
     assert response_data["position_title"] == "Python Developer"
     assert response_data["status"] == "applied"
     assert response_data["application_date"] == "2026-08-02"
+
+
+def test_list_applications_returns_empty_list(
+    client: TestClient,
+) -> None:
+    response = client.get("/applications")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_applications_returns_created_applications(
+    client: TestClient,
+) -> None:
+    creation_response = client.post(
+        "/applications",
+	json={
+	    "company_name": "Example GmbH",
+	    "status": "applied",
+	    "application_date": "2026-08-02",
+	},
+    )
+
+    assert creation_response.status_code == 201
+
+    response = client.get("/applications")
+
+    assert response.status_code == 200
+
+    applications = response.json()
+
+    assert len(applications) == 1
+    assert applications[0]["id"] == 1
+    assert applications[0]["company_name"] == "Example GmbH"
+    assert applications[0]["status"] == "applied"

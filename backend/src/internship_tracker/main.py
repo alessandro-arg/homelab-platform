@@ -33,3 +33,16 @@ def create_application(
     ],
 ) -> Application:
     return application_repository.create(application_data)
+
+
+@app.get(
+    "/applications",
+    response_model=list[Application],
+)
+def list_applications(
+    application_repository: Annotated[
+        ApplicationRepository,
+        Depends(get_repository),
+    ],
+) -> list[Application]:
+    return application_repository.list_all()
