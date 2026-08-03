@@ -94,3 +94,23 @@ def update_application(
         )
 
     return application
+
+
+@app.delete(
+    "/applications/{application_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_application(
+    application_id: int,
+    application_repository: Annotated[
+        ApplicationRepository,
+        Depends(get_repository),
+    ],
+) -> None:
+    deleted = application_repository.delete(application_id)
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found",
+        )

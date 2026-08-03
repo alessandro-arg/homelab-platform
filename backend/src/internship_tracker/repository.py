@@ -39,3 +39,10 @@ class ApplicationRepository:
         self._applications[application_id] = application
 
         return application
+
+    def delete(self, application_id: int) -> bool:
+        if application_id not in self._applications:
+            return False
+
+        del self._applications[application_id]
+        return True

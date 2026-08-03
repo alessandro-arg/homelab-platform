@@ -164,3 +164,37 @@ def test_update_unknown_application_returns_404(
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Application not found"}
+
+
+def test_delete_application(client: TestClient) -> None:
+    creation_response = client.post(
+        "/applications",
+        json={
+            "company_name": "Example GmbH",
+            "status": "applied",
+            "application_date": "2026-08-03",
+        },
+    )
+
+    assert creation_response.status_code == 201
+
+    application_id = creation_response.json()["id"]
+
+    response = client.delete(f"/applications/{application_id}")
+
+    assert response.status_code == 204
+    assert response.content == b""
+
+    get_response = client.get(f"/applications/{application_id}")
+
+    assert get_response.status_code == 404
+    assert get_response.json() == {"detail": "Application not found"}
+
+
+def test_delete_unknown_application_returns_404(
+        client: TestClient,
+) -> None:
+    response = client.delete("/applications/999")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Application not found"}
