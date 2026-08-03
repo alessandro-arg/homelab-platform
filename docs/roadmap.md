@@ -57,13 +57,51 @@ Phase 1 was completed with:
 
 Application data is intentionally temporary and is deleted when the backend process stops.
 
-## Phase 2: Persistent Storage
+## Phase 2: Persistent Storage - **In Progress**
 
 ### Goal
 
-### Deliverables
+Replace the temporary in-memory application storage with PostgreSQL while preserving the existing API behavior.
+
+This phase introduces database configuration, SQLAlchemiy models, migrations, and a database-backed repository. The FastAPI endpoints and their request and response formats should remain unchanged.
+
+### Technical Direction
+
+- PostgreSQL as the relational database
+- SQLAlchemy for database access
+- Psycopg as the PostgreSQL driver
+- Alembic for database access
+- Environment variables for database configuration
+- Separate API models and database models
+- Repository-based separation between HTTP and database logic
+- Isolated database integration tests
+
+### Planned Deliverables
+
+- A repository contract independent of the storage implementation
+- A retained in-memory repository for fast isolated tests
+- Database engine and session configuration
+- A SQLAlchemy application table model
+- An initial Alembic migration
+- A PostgreSQL-backed application repository
+- FastAPI database-session dependency injection
+- Persistent CRUD operations
+- Automated database integration tests
+- Local database setup and migration documentation
 
 ### Definition of Done
+
+- [] PostgreSQL can be configured without hard-coded credentials
+- [] The database schema can be created from an empty database using Alembic
+- [] All CRUD endpoints store and retrieve data through PostgreSQL
+- [] Existing endpoint paths and response formats remain unchanged
+- [] Application data remains available after restarting the backend
+- [] Unknown application IDs still return HTTP 404
+- [] Tests use isolated database state
+- [] Existing validation behavior remains unchanged
+- [] All automated tests pass
+- [] The persistent CRUD flow is verified manually through Swagger
+- [] Database setup, migrations, and local development commands are documented
 
 ## Phase 3: Containerization
 
