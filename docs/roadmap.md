@@ -63,14 +63,14 @@ Application data is intentionally temporary and is deleted when the backend proc
 
 Replace the temporary in-memory application storage with PostgreSQL while preserving the existing API behavior.
 
-This phase introduces database configuration, SQLAlchemiy models, migrations, and a database-backed repository. The FastAPI endpoints and their request and response formats should remain unchanged.
+This phase introduces database configuration, SQLAlchemy models, migrations, and a database-backed repository. The FastAPI endpoints and their request and response formats should remain unchanged.
 
 ### Technical Direction
 
 - PostgreSQL as the relational database
 - SQLAlchemy for database access
 - Psycopg as the PostgreSQL driver
-- Alembic for database access
+- Alembic for database migrations
 - Environment variables for database configuration
 - Separate API models and database models
 - Repository-based separation between HTTP and database logic
