@@ -29,7 +29,7 @@ def test_application_table_has_expected_columns():
     assert table.c.status.nullable is False
 
     assert table.c.position_title.nullable is True
-    assert table.c.application_date.nullable is True
+    assert table.c.application_date.nullable is False
     assert table.c.contact_person.nullable is True
     assert table.c.contact_email.nullable is True
     assert table.c.job_url.nullable is True

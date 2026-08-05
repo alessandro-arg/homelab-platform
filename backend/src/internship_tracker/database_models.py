@@ -38,9 +38,9 @@ class ApplicationRecord(Base):
         nullable=False,
     )
 
-    application_date: Mapped[date | None] = mapped_column(
+    application_date: Mapped[date] = mapped_column(
         Date,
-        nullable=True,
+        nullable=False,
     )
 
     contact_person: Mapped[str | None] = mapped_column(
