@@ -2,20 +2,12 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
 
+from internship_tracker.dependencies import get_repository
 from internship_tracker.models import Application, ApplicationCreate
-from internship_tracker.repository import (
-    ApplicationRepository,
-    InMemoryApplicationRepository,
-)
+from internship_tracker.repository import ApplicationRepository
 
 
 app = FastAPI(title="Internship Application Tracker")
-
-repository = InMemoryApplicationRepository()
-
-
-def get_repository() -> ApplicationRepository:
-    return repository
 
 
 @app.get("/health")
