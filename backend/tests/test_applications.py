@@ -4,12 +4,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from internship_tracker.main import app, get_repository
-from internship_tracker.repository import ApplicationRepository
+from internship_tracker.repository import InMemoryApplicationRepository
 
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    test_repository = ApplicationRepository()
+    test_repository = InMemoryApplicationRepository()
 
     app.dependency_overrides[get_repository] = lambda: test_repository
 

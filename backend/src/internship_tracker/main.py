@@ -3,12 +3,15 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 
 from internship_tracker.models import Application, ApplicationCreate
-from internship_tracker.repository import ApplicationRepository
+from internship_tracker.repository import (
+    ApplicationRepository,
+    InMemoryApplicationRepository,
+)
 
 
 app = FastAPI(title="Internship Application Tracker")
 
-repository = ApplicationRepository()
+repository = InMemoryApplicationRepository()
 
 
 def get_repository() -> ApplicationRepository:
