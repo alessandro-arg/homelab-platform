@@ -6,17 +6,23 @@ A self-hosted platform for managing internship applications and, later, homelab 
 
 Phase 1: Backend Foundation - **Completed**
 
+Phase 2: Persistent Storage - **Completed**
+
 The project currently provides:
 
 - A FastAPI REST API
-- An application domain model with validation
-- In-memory application storage
+- An application domain model with Pydantic validation
 - Complete CRUD operations for internship applications
+- PostgreSQL-backed persistent storage
+- SQLAlchemy-based database access
+- Alembic database migrations
+- Repository-based separation between API and storage logic
 - HTTP `404` handling for unknown applications
-- Interactive OpenAPI documentation through Swagger
+- Interactive OpenAPI documentation through Swagger UI
 - Automated testing with pytest
+- Isolated PostgreSQL integration testing
 
-Application data is currently stored only in memory and is cleared whenever the backend process restarts.
+Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
 ## Available API Endpoints
 
@@ -33,7 +39,7 @@ Application data is currently stored only in memory and is cleared whenever the 
 
 - Build an internship application tracker
 - Learn backend development with Python and FastAPI
-- Add persistent database storage
+- Build the application around persistent PostgreSQL storage
 - Containerize the application with Podman
 - Deploy it to a Raspberry Pi
 - Add automation, CI/CD, monitoring, and Kubernetes later
@@ -43,23 +49,39 @@ Application data is currently stored only in memory and is cleared whenever the 
 ```text
 homelab-platform/
 ├── backend/
+│   ├── alembic.ini
+│   ├── migrations/
+│   │   ├── env.py
+│   │   └── versions/
 │   ├── pyproject.toml
 │   ├── src/
 │   │   └── internship_tracker/
 │   │       ├── __init__.py
+│   │       ├── config.py
+│   │       ├── database.py
+│   │       ├── database_models.py
+│   │       ├── dependencies.py
 │   │       ├── main.py
 │   │       ├── models.py
-│   │       └── repository.py
+│   │       ├── repository.py
+│   │       └── sqlalchemy_repository.py
 │   └── tests/
+│       ├── integration/
+│       │   └── test_postgresql.py
 │       ├── test_applications.py
+│       ├── test_config.py
+│       ├── test_database.py
+│       ├── test_database_models.py
 │       ├── test_health.py
-│       └── test_models.py
+│       ├── test_models.py
+│       └── test_sqlalchemy_repository.py
 ├── docs/
 │   ├── architecture.md
 │   ├── domain-model.md
 │   ├── project.md
 │   └── roadmap.md
-├── infrastructure/
+├── .env.example
+├── compose.yaml
 └── README.md
 ```
 
@@ -68,22 +90,62 @@ homelab-platform/
 ### Requirements
 
 - Python 3.12 or newer
+- Docker with Docker Compose
 
-### Setup
+### Python Setup
+
+From the repository root:
 
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --editable ".[dev]"
+cd ..
 ```
+
+### Database Configuration
+
+Create a local environment file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Update the values in `.env` with your local PostgreSQL password.
+
+The `.env` file contains credentials and must not be committed to Git.
+
+### Start PostgreSQL
+
+From the repository root:
+
+```bash
+docker compose up -d postgres
+```
+
+Check the database container:
+
+```bash
+docker compose ps postgres
+```
+
+### Run Database Migrations
+
+From the repository root, with the Python virtual environment active:
+
+```bash
+alembic -c backend/alembic.ini upgrade head
+```
+
+Alembic applies all database migrations required by the current application version.
 
 ### Run the API
 
-From the `backend` directory:
+From the repository root:
 
 ```bash
-python -m uvicorn internship_tracker.main:app --reload
+fastapi dev backend/src/internship_tracker/main.py
 ```
 
 The API is available at:
@@ -94,20 +156,38 @@ The API is available at:
 
 ### Run Tests
 
-From the repository root, with the virtual environment active:
+From the repository root:
 
 ```bash
+cd backend
 python -m pytest -v
+```
+
+Run only the fast tests:
+
+```bash
+python -m pytest -m "not integration" -v
+```
+
+Run only the PostgreSQL integration test:
+
+```bash
+python -m pytest -m integration -v
+```
+
+The PostgreSQL integration test requires the test database service:
+
+```bash
+docker compose -f ../compose.yaml up -d postgres_test
 ```
 
 ## Current Limitations
 
-- Application data is not persistent.
-- Restarting the backend clears all stored applications.
 - Authentication and multiple users are not supported.
 - A frontend is not included yet.
-
-Persistent storage will be introduced in Phase 2.
+- The FastAPI application itself is not containerized yet.
+- Deployment to the Raspberry Pi is not implemented yet.
+- CI/CD and monitoring are not implemented yet.
 
 ## Documentation
 

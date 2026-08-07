@@ -57,13 +57,13 @@ Phase 1 was completed with:
 
 Application data is intentionally temporary and is deleted when the backend process stops.
 
-## Phase 2: Persistent Storage - **In Progress**
+## Phase 2: Persistent Storage - **Completed**
 
 ### Goal
 
 Replace the temporary in-memory application storage with PostgreSQL while preserving the existing API behavior.
 
-This phase introduces database configuration, SQLAlchemy models, migrations, and a database-backed repository. The FastAPI endpoints and their request and response formats should remain unchanged.
+This phase introduced database configuration, SQLAlchemy models, Alembic migrations, a database-backed repository, and automated PostgreSQL integration testing.
 
 ### Technical Direction
 
@@ -76,32 +76,47 @@ This phase introduces database configuration, SQLAlchemy models, migrations, and
 - Repository-based separation between HTTP and database logic
 - Isolated database integration tests
 
-### Planned Deliverables
+### Completed Deliverables
 
 - A repository contract independent of the storage implementation
-- A retained in-memory repository for fast isolated tests
+- A retained in-memory repository for fast isolated API tests
 - Database engine and session configuration
 - A SQLAlchemy application table model
+- Alembic database migrations
 - An initial Alembic migration
 - A PostgreSQL-backed application repository
 - FastAPI database-session dependency injection
 - Persistent CRUD operations
-- Automated database integration tests
+- An isolated PostgreSQL service for integration testing
+- Automated PostgreSQL integration testing
 - Local database setup and migration documentation
 
 ### Definition of Done
 
-- [] PostgreSQL can be configured without hard-coded credentials
-- [] The database schema can be created from an empty database using Alembic
-- [] All CRUD endpoints store and retrieve data through PostgreSQL
-- [] Existing endpoint paths and response formats remain unchanged
-- [] Application data remains available after restarting the backend
-- [] Unknown application IDs still return HTTP 404
-- [] Tests use isolated database state
-- [] Existing validation behavior remains unchanged
-- [] All automated tests pass
-- [] The persistent CRUD flow is verified manually through Swagger
-- [] Database setup, migrations, and local development commands are documented
+- [x] PostgreSQL can be configured without hard-coded credentials
+- [x] The database schema can be created from an empty database using Alembic
+- [x] All CRUD endpoints store and retrieve data through PostgreSQL
+- [x] Existing endpoint paths and response formats remain unchanged
+- [x] Application data remains available after restarting the backend
+- [x] Unknown application IDs still return HTTP 404
+- [x] Tests use isolated database state
+- [x] Existing validation behavior remains unchanged
+- [x] All automated tests pass
+- [x] The persistent CRUD flow is verified manually through Swagger
+- [x] Database setup, migrations, and local development commands are documented
+
+### Phase 2 Result
+
+- PostgreSQL-backed persistent application storage
+- SQLAlchemy ORM models and repository implementation
+- Alembic-managed database schema migrations
+- Environment-based database configuration
+- FastAPI database-session dependency injection
+- Separate fast and PostgreSQL integration test layers
+- 30 passing automated tests
+- Verified persistence across backend restarts
+
+The API contract established in Phase 1 remains unchanged while application data is now stored persistently in PostgreSQL.
 
 ## Phase 3: Containerization
 
