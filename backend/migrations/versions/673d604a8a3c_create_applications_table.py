@@ -1,7 +1,7 @@
 """create applications table
 
 Revision ID: 673d604a8a3c
-Revises: 
+Revises:
 Create Date: 2026-08-05 12:52:15.412044
 
 """
