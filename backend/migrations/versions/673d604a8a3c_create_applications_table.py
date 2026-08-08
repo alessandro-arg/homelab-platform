@@ -26,7 +26,7 @@ def upgrade() -> None:
     sa.Column('company_name', sa.String(length=255), nullable=False),
     sa.Column('position_title', sa.String(length=255), nullable=True),
     sa.Column('status', sa.String(length=50), nullable=False),
-    sa.Column('application_date', sa.Date(), nullable=True),
+    sa.Column('application_date', sa.Date(), nullable=False),
     sa.Column('contact_person', sa.String(length=255), nullable=True),
     sa.Column('contact_email', sa.String(length=320), nullable=True),
     sa.Column('job_url', sa.String(length=2048), nullable=True),

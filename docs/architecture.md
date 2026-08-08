@@ -115,7 +115,7 @@ It is responsible for:
 - Querying applications
 - Updating records
 - Deleting records
-- Committing successfull changes
+- Committing successful changes
 - Rolling back failed database transactions
 - Converting database records back into API models
 

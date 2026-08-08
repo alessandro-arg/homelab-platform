@@ -169,16 +169,18 @@ Run only the fast tests:
 python -m pytest -m "not integration" -v
 ```
 
-Run only the PostgreSQL integration test:
+Run only the PostgreSQL integration test.
 
-```bash
-python -m pytest -m integration -v
-```
-
-The PostgreSQL integration test requires the test database service:
+Start the PostgreSQL test database:
 
 ```bash
 docker compose -f ../compose.yaml up -d postgres_test
+```
+
+Then run the integration test:
+
+```bash
+python -m pytest -m integration -v
 ```
 
 ## Current Limitations
