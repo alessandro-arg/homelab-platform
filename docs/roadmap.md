@@ -122,9 +122,39 @@ The API contract established in Phase 1 remains unchanged while application data
 
 ### Goal
 
+Containerize the FastAPI backend and run the complete application stack with Docker Compose.
+
+FastAPI and PostgreSQL should run as separate containers and communicate through the Docker Compose network. The containerized setup must preserve the existing API behavior and PostgreSQL persistence established in Phase 2.
+
 ### Deliverables
 
+- A Docker image for the FastAPI backend
+- A backend service added to `compose.yaml`
+- Container-specific database configuration using the PostgreSQL Compose service name
+- Docker Compose networking between FastAPI and PostgreSQL
+- Database migrations that can be executed against the containerized PostgreSQL service
+- Startup ordering and health checks for the application stack
+- Persistent PostgreSQL storage through the existing Docker volume
+- Automated validation of the containerized backend
+- Manual verification of CRUD operations through the containerized API
+- Documentation for building, starting, stopping, inspecting, and rebuilding the containerized stack
+
 ### Definition of Done
+
+- [ ] The FastAPI backend image builds successfully
+- [ ] The FastAPI backend starts successfully as a Docker Compose service
+- [ ] PostgreSQL starts successfully as a Docker Compose service
+- [ ] FastAPI connects to PostgreSQL through the Docker Compose network
+- [ ] The backend does not depend on `localhost` for communication with PostgreSQL inside containers
+- [ ] Alembic migrations can initialize an empty containerized PostgreSQL database
+- [ ] `GET /health` returns HTTP `200` through the exposed backend container port
+- [ ] All CRUD endpoints work while FastAPI and PostgreSQL are containerized
+- [ ] Application data remains available after restarting the backend container
+- [ ] PostgreSQL data remains available after recreating the PostgreSQL container
+- [ ] Existing automated tests continue to pass
+- [ ] Container-specific automated validation passes
+- [ ] The complete containerized workflow has been verified manually
+- [ ] Build, startup, shutdown, migration, testing, and troubleshooting commands are documented
 
 ## Phase 4: Raspberry Pi Deployment
 
