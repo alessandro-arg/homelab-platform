@@ -1,12 +1,42 @@
+from typing import Protocol
+
 from internship_tracker.models import Application, ApplicationCreate
 
 
-class ApplicationRepository:
+class ApplicationRepository(Protocol):
+    def create(
+        self,
+        application_data: ApplicationCreate,
+    ) -> Application: ...
+
+    def list_all(self) -> list[Application]: ...
+
+    def get_by_id(
+        self,
+        application_id: int,
+    ) -> Application | None: ...
+
+    def update(
+        self,
+        application_id: int,
+        application_data: ApplicationCreate,
+    ) -> Application | None: ...
+
+    def delete(
+        self,
+        application_id: int,
+    ) -> bool: ...
+
+
+class InMemoryApplicationRepository:
     def __init__(self) -> None:
         self._applications: dict[int, Application] = {}
         self._next_id = 1
 
-    def create(self, application_data: ApplicationCreate) -> Application:
+    def create(
+        self,
+        application_data: ApplicationCreate,
+    ) -> Application:
         application = Application(
             id=self._next_id,
             **application_data.model_dump(),
@@ -20,7 +50,10 @@ class ApplicationRepository:
     def list_all(self) -> list[Application]:
         return list(self._applications.values())
 
-    def get_by_id(self, application_id: int) -> Application | None:
+    def get_by_id(
+        self,
+        application_id: int,
+    ) -> Application | None:
         return self._applications.get(application_id)
 
     def update(
@@ -40,9 +73,13 @@ class ApplicationRepository:
 
         return application
 
-    def delete(self, application_id: int) -> bool:
+    def delete(
+        self,
+        application_id: int,
+    ) -> bool:
         if application_id not in self._applications:
             return False
 
         del self._applications[application_id]
+
         return True

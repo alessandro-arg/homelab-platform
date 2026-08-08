@@ -9,6 +9,10 @@ description = "A self-hosted API for managing internship applications."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard-no-fastapi-cloud-cli]",
+    "sqlalchemy>=2.0,<3.0",
+    "psycopg[binary]>=3.3,<4.0",
+    "alembic>=1.18,<2.0",
+    "pydantic-settings>=2.0,<3.0",
 ]
 
 [project.optional-dependencies]
@@ -19,3 +23,8 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that require external services",
+]
