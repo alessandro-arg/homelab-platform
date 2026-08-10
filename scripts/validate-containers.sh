@@ -17,6 +17,28 @@ if [[ -z "$migration_container" ]]; then
     exit 1
 fi
 
+migration_status=""
+
+for _ in {1..30}; do
+    migration_status="$(
+        docker inspect \
+            --format '{{.State.Status}}' \
+            "$migration_container"
+    )"
+
+    if [[ "$migration_status" == "exited" ]]; then
+        break
+    fi
+
+    sleep 1
+done
+
+if [[ "$migration_status" != "exited" ]]; then
+    echo "Migration container did not complete."
+    docker compose logs migrate
+    exit 1
+fi
+
 migration_exit_code="$(
     docker inspect \
         --format '{{.State.ExitCode}}' \
