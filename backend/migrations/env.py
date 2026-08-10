@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.engine import URL
 
 from alembic import context
 
@@ -22,10 +23,16 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 settings = Settings()
+database_url = settings.get_database_url()
+
+if isinstance(database_url, URL):
+    database_url = database_url.render_as_string(
+        hide_password=False
+    )
 
 config.set_main_option(
     "sqlalchemy.url",
-    settings.database_url.replace("%", "%%"),
+    database_url.replace("%", "%%"),
 )
 
 target_metadata = Base.metadata

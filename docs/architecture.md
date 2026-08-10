@@ -2,9 +2,9 @@
 
 ## Current Scope
 
-The current system is a FastAPI backend application for managing internship applications.
+The current system is a containerized FastAPI backend application for managing internship applications.
 
-The backend provides a REST API with complete CRUD operations. Application data is stored persistently in PostgreSQL and remains available when the backend process restarts.
+The backend provides a REST API with complete CRUD operations. Application data is stored persistently in PostgreSQL and remains available when the application and database containers are restarted or recreated.
 
 The current architecture includes:
 
@@ -16,9 +16,12 @@ The current architecture includes:
 - Psycopg as the PostgreSQL driver
 - Alembic for database schema migrations
 - Dependency injection for repository and database-session management
-- Automated unit, API, repository, and PostgreSQL integration tests
+- Docker for the FastAPI application image
+- Docker Compose for application orchestration and networking
+- Container health checks and startup dependencies
+- Automated unit, API, repository, PostgreSQL integration, and container smoke tests
 
-Authentication, a frontend, application containerization, deployment, and external services are not part of the current architecture.
+Authentication, a frontend, Raspberry Pi deployment, and external services are not part of the current architecture.
 
 ## Components
 
@@ -188,17 +191,83 @@ The production application receives `SqlAlchemyApplicationRepository`.
 
 During isolated API tests, FastAPI's dependency override mechanism replaces the production repository with a fresh `InMemoryApplicationRepository`.
 
+### Containerized Runtime Architecture
+
+The application runtime is orchestrated with Docker Compose.
+
+The normal application stack contains three services:
+
+- `postgres` - persistent PostgreSQL database
+- `migrate` - Alembic migration service
+- `backend` - FastAPI application
+
+A separate `postgres_test` service is available through the `test` Compose profile for isolated PostgreSQL integration testing.
+
+The normal startup sequence is:
+
+```text
+PostgreSQL container
+        |
+        | health check succeeds
+        v
+Migration container
+        |
+        | alembic upgrade head
+        | exits successfully
+        v
+FastAPI container
+        |
+        | health check succeeds
+        v
+Application ready
+```
+
+The migration service is built from the same Dockerfile and application source as the FastAPI service, but overrides the image's default command to execute Alembic.
+
+The backend does not start unless the migration service completes successfully.
+
+Docker Compose provides an internal network and DNS resolution between services.
+
+Host-side development connects to PostgreSQL through:
+
+```text
+localhost:5432
+```
+
+Inside Docker Compose, the backend and migration services connect through:
+
+```text
+postgres:5432
+```
+
+The hostname `postgres` is the Docker Compose service name.
+
+Inside the backend container, `localhost` refers to the backend container itself and therefore cannot be used to reach PostgreSQL.
+
+The FastAPI container exposes port `8000` to the host so the API remains available at `127.0.0.1:8000`.
+
+The backend health check calls the `/health` endpoint from inside the container. PostgreSQL uses `pg_isready` for its health check.
+
 ### PostgreSQL
 
 PostgreSQL is the persistent data store.
 
-For local development, PostgreSQL runs as a Compose service.
+In the containerized application stack, PostgreSQL runs as the `postgres` Docker Compose service.
 
-The development database uses a named volume so that its data remains available when the PostgreSQL container is restarted or recreated.
+The development database uses the `postgres_data` named volume:
 
-A separate PostgreSQL test service is available for integration testing.
+```text
+PostgreSQL container
+        |
+        v
+postgres_data named volume
+```
 
-The test database does not use the development database's persistent volume and is safe to clean between tests.
+The container itself is disposable. Database files are stored in the named volume, allowing application data to remain available when the PostgreSQL container is restarted or recreated.
+
+A separate `postgres_test` service is available for integration testing.
+
+The test database does not use the development database's persistent volume and can be removed safely after integration tests.
 
 ### Alembic Migrations
 
@@ -213,9 +282,19 @@ backend/migrations/
 
 Alembic uses the application's `DATABASE_URL` and SQLAlchemy `Base.metadata`.
 
-This allows the database schema to be created and upgraded from migration files instead of relying on application startup to create tables automatically.
+The current migration history contains the initial migration that creates the `applications` table with its required schema.
 
-The current migrations create the `applications` table and enforce the required application date.
+During normal container startup, the `migrate` Compose service executes:
+
+```bash
+alembic -c alembic.ini upgrade head
+```
+
+The migration service starts only after PostgreSQL becomes healthy.
+
+The FastAPI backend starts only after the migration service exits successfully.
+
+This ensures that the database schema is upgraded before the application begins serving requests.
 
 ## Request Flow
 
@@ -432,12 +511,10 @@ This provides useful confidence without making the whole test suite dependent on
 
 ## Future Architecture
 
-The next phase focuses on containerization.
+The next phase focuses on deploying the containerized application stack to the Raspberry Pi.
 
 Later phases may introduce:
 
-- Application containers
-- Raspberry Pi deployment
 - CI/CD
 - Monitoring
 - A web frontend

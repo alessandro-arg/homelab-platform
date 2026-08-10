@@ -118,13 +118,64 @@ This phase introduced database configuration, SQLAlchemy models, Alembic migrati
 
 The API contract established in Phase 1 remains unchanged while application data is now stored persistently in PostgreSQL.
 
-## Phase 3: Containerization
+## Phase 3: Containerization - **Completed**
 
 ### Goal
 
-### Deliverables
+Containerize the FastAPI backend and run the complete application stack with Docker Compose.
+
+FastAPI and PostgreSQL should run as separate containers and communicate through the Docker Compose network. The containerized setup must preserve the existing API behavior and PostgreSQL persistence established in Phase 2.
+
+### Completed Deliverables
+
+- A Docker image for the FastAPI backend
+- A backend service added to `compose.yaml`
+- Container-specific database configuration using the PostgreSQL Compose service name
+- Docker Compose networking between FastAPI and PostgreSQL
+- Database migrations that can be executed against the containerized PostgreSQL service
+- Startup ordering and health checks for the application stack
+- Persistent PostgreSQL storage through the existing Docker volume
+- Automated validation of the containerized backend
+- Manual verification of CRUD operations through the containerized API
+- Documentation for building, starting, stopping, inspecting, and rebuilding the containerized stack
 
 ### Definition of Done
+
+- [x] The FastAPI backend image builds successfully
+- [x] The FastAPI backend starts successfully as a Docker Compose service
+- [x] PostgreSQL starts successfully as a Docker Compose service
+- [x] FastAPI connects to PostgreSQL through the Docker Compose network
+- [x] The backend does not depend on `localhost` for communication with PostgreSQL inside containers
+- [x] Alembic migrations can initialize an empty containerized PostgreSQL database
+- [x] `GET /health` returns HTTP `200` through the exposed backend container port
+- [x] All CRUD endpoints work while FastAPI and PostgreSQL are containerized
+- [x] Application data remains available after restarting the backend container
+- [x] PostgreSQL data remains available after recreating the PostgreSQL container
+- [x] Existing automated tests continue to pass
+- [x] Container-specific automated validation passes
+- [x] The complete containerized workflow has been verified manually
+- [x] Build, startup, shutdown, migration, testing, and troubleshooting commands are documented
+
+### Phase 3 Result
+
+Phase 3 was completed with:
+
+- A Docker image for the FastAPI backend
+- Docker Compose orchestration for FastAPI and PostgreSQL
+- Internal Compose networking using postgres:5432
+- Automatic Alembic migrations before backend startup
+- PostgreSQL and FastAPI container health checks
+- Startup dependencies based on service health and migration completion
+- Persistent PostgreSQL storage through the postgres_data named volume
+- An optional isolated PostgreSQL test service
+- Automated container smoke validation
+- 30 passing fast tests
+- 1 passing PostgreSQL integration test
+- Verified CRUD operations through the containerized API
+- Verified persistence across backend restarts and PostgreSQL container recreation
+- Verified initialization from an empty PostgreSQL volume
+
+The complete application backend can now be built and started with Docker Compose while preserving the API behavior and persistent storage established in the previous phases.
 
 ## Phase 4: Raspberry Pi Deployment
 

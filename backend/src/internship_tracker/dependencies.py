@@ -26,7 +26,7 @@ def get_settings() -> Settings:
 def get_engine() -> Engine:
     settings = get_settings()
 
-    return create_database_engine(settings.database_url)
+    return create_database_engine(settings.get_database_url())
 
 
 @lru_cache

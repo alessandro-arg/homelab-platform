@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, URL
 from sqlalchemy.orm import Session, sessionmaker
 
 
-def create_database_engine(database_url: str) -> Engine:
+def create_database_engine(database_url: str | URL) -> Engine:
     return create_engine(
         database_url,
         pool_pre_ping=True
