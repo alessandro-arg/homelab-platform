@@ -8,6 +8,8 @@ Phase 1: Backend Foundation - **Completed**
 
 Phase 2: Persistent Storage - **Completed**
 
+Phase 3: Containerization - **Completed**
+
 The project currently provides:
 
 - A FastAPI REST API
@@ -21,6 +23,11 @@ The project currently provides:
 - Interactive OpenAPI documentation through Swagger UI
 - Automated testing with pytest
 - Isolated PostgreSQL integration testing
+- A containerized FastAPI backend
+- Docker Compose orchestration for FastAPI and PostgreSQL
+- Automatic Alembic migrations during container startup
+- Docker health checks for PostgreSQL and FastAPI
+- Automated container smoke validation
 
 Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
@@ -50,6 +57,8 @@ Application data is stored persistently in PostgreSQL and remains available when
 homelab-platform/
 ├── backend/
 │   ├── alembic.ini
+│   ├── Dockerfile
+│   ├── .dockerignore
 │   ├── migrations/
 │   │   ├── env.py
 │   │   └── versions/
@@ -80,10 +89,188 @@ homelab-platform/
 │   ├── domain-model.md
 │   ├── project.md
 │   └── roadmap.md
+├── scripts/
+│   └── validate-containers.sh
 ├── .env.example
 ├── compose.yaml
 └── README.md
 ```
+
+## Containerized Application
+
+The complete application stack can run with Docker Compose.
+
+The stack contains:
+
+- `postgres` - persistent PostgreSQL database
+- `migrate` - one-shot Alembic migration service
+- `backend` - FastAPI application
+- `postgres_test` - optional isolated PostgreSQL service for integration tests
+
+Start the application stack from the repository root:
+
+```bash
+docker compose up --build -d
+```
+
+Docker Compose starts the services in the following order:
+
+```text
+PostgreSQL
+    |
+    | health check passes
+    v
+Alembic migrations
+    |
+    | exit successfully
+    v
+FastAPI backend
+    |
+    | health check passes
+    v
+Application ready
+```
+
+Check the current state:
+
+```bash
+docker compose ps -a
+```
+
+The backend is available at:
+
+- Health check: `http://127.0.0.1:8000/health`
+- Interactive API documentation: `http://127.0.0.1:8000/docs`
+- OpenAPI schema: `http://127.0.0.1:8000/openapi.json`
+
+Inspect service logs:
+
+```bash
+docker compose logs backend
+docker compose logs migrate
+docker compose logs postgres
+```
+
+Stop and remove the application containers and Compose network:
+
+```bash
+docker compose down
+```
+
+The PostgreSQL named volume is preserved by this command, so application data remains available on the next startup.
+
+Do not use `docker compose down -v` unless the PostgreSQL data should intentionally be deleted.
+
+### Container Database Configuration
+
+Host-side development connects to PostgreSQL through the published host port:
+
+```text
+localhost:5432
+```
+
+Containers communicate through the internal Docker Compose network instead.
+
+The FastAPI and migration containers connect to PostgreSQL using the Compose service name:
+
+```text
+postgres:5432
+```
+
+Inside a container, `localhost` refers to that same container and cannot be used to reach the PostgreSQL container.
+
+### Database Migrations
+
+Migrations run automatically when the normal Compose stack starts.
+
+They can also be executed manually with:
+
+```bash
+docker compose run --rm migrate
+```
+
+Check the current Alembic revision from the backend container:
+
+```bash
+docker compose exec backend alembic -c alembic.ini current
+```
+
+### Container Validation
+
+Run the automated container smoke validation from the repository root:
+
+```bash
+./scripts/validate-containers.sh
+```
+
+The validation:
+
+1. Builds the backend image.
+2. Recreates the application containers.
+3. Waits for the FastAPI backend to become healthy.
+4. Verifies that Alembic migrations completed successfully.
+5. Checks the /health and /applications endpoints.
+
+The PostgreSQL named volume is preserved during validation.
+
+### Container Troubleshooting
+
+Check the state of all application services:
+
+```bash
+docker compose ps -a
+```
+
+Inspect service logs:
+
+```bash
+docker compose logs backend
+docker compose logs migrate
+docker compose logs postgres
+```
+
+Follow backend logs while the application is running:
+
+```bash
+docker compose logs -f backend
+```
+
+Rebuild and recreate the application containers:
+
+```bash
+docker compose up --build --force-recreate -d
+```
+
+If the backend does not start, check whether the migration service completed successfully:
+
+```bash
+docker compose ps -a migrate
+docker compose logs migrate
+```
+
+Check the database migration revision from the running backend container:
+
+```bash
+docker compose exec backend alembic -c alembic.ini current
+```
+
+If PostgreSQL is unavailable, verify that it is healthy:
+
+```bash
+docker compose ps postgres
+docker compose logs postgres
+```
+
+The application containers and Compose network can be recreated without deleting persistent PostgreSQL data:
+
+```bash
+docker compose down
+docker compose up --build -d
+```
+
+The `postgres_data` named volume is preserved by `docker compose down`.
+
+Using `docker compose down -v` also removes the persistent database volume and should only be used when the development database is intentionally being reset.
 
 ## Local Development
 
@@ -183,11 +370,17 @@ Then run the integration test:
 python -m pytest -m integration -v
 ```
 
+Stop and remove the isolated test database after the integration test:
+
+```bash
+docker compose -f ../compose.yaml stop postgres_test
+docker compose -f ../compose.yaml rm -f postgres_test
+```
+
 ## Current Limitations
 
 - Authentication and multiple users are not supported.
 - A frontend is not included yet.
-- The FastAPI application itself is not containerized yet.
 - Deployment to the Raspberry Pi is not implemented yet.
 - CI/CD and monitoring are not implemented yet.
 
