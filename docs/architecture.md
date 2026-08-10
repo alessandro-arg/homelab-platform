@@ -222,7 +222,7 @@ FastAPI container
 Application ready
 ```
 
-The migration service uses the same backend image as the FastAPI service but overrides the image's default command to execute Alembic.
+The migration service is built from the same Dockerfile and application source as the FastAPI service, but overrides the image's default command to execute Alembic.
 
 The backend does not start unless the migration service completes successfully.
 
