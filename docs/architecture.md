@@ -511,12 +511,10 @@ This provides useful confidence without making the whole test suite dependent on
 
 ## Future Architecture
 
-The next phase focuses on containerization.
+The next phase focuses on deploying the containerized application stack to the Raspberry Pi.
 
 Later phases may introduce:
 
-- Application containers
-- Raspberry Pi deployment
 - CI/CD
 - Monitoring
 - A web frontend

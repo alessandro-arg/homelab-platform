@@ -5,16 +5,46 @@ set -euo pipefail
 echo "Starting containerized application stack..."
 docker compose up --build --force-recreate -d
 
+echo "Checking database migration..."
+
+migration_container="$(
+    docker compose ps -a -q migrate
+)"
+
+if [[ -z "$migration_container" ]]; then
+    echo "Migration container was not created."
+    docker compose ps -a
+    exit 1
+fi
+
+migration_exit_code="$(
+    docker inspect \
+        --format '{{.State.ExitCode}}' \
+        "$migration_container"
+)"
+
+if [[ "$migration_exit_code" != "0" ]]; then
+    echo "Database migration failed with exit code ${migration_exit_code}."
+    docker compose logs migrate
+    exit 1
+fi
+
 echo "Waiting for backend health..."
 
 backend_status=""
 
 for attempt in {1..30}; do
-    backend_status="$(
-        docker inspect \
-            --format '{{.State.Health.Status}}' \
-            "$(docker compose ps -q backend)"
+    backend_container="$(
+        docker compose ps -q backend
     )"
+
+    if [[ -n "$backend_container" ]]; then
+        backend_status="$(
+            docker inspect \
+                --format '{{.State.Health.Status}}' \
+                "$backend_container"
+        )"
+    fi
 
     if [[ "$backend_status" == "healthy" ]]; then
         break
@@ -26,18 +56,6 @@ done
 if [[ "$backend_status" != "healthy" ]]; then
     echo "Backend did not become healthy."
     docker compose logs backend
-    exit 1
-fi
-
-migration_exit_code="$(
-    docker inspect \
-        --format '{{.State.ExitCode}}' \
-        "$(docker compose ps -a -q migrate)"
-)"
-
-if [[ "$migration_exit_code" != "0" ]]; then
-    echo "Database migration failed."
-    docker compose logs migrate
     exit 1
 fi
 

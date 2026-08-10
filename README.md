@@ -361,7 +361,7 @@ Run only the PostgreSQL integration test.
 Start the PostgreSQL test database:
 
 ```bash
-docker compose -f ../compose.yaml up -d postgres_test
+docker compose -f ../compose.yaml up -d --wait postgres_test
 ```
 
 Then run the integration test:
