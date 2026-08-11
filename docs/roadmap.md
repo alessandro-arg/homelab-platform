@@ -181,9 +181,45 @@ The complete application backend can now be built and started with Docker Compos
 
 ### Goal
 
+Deploy the existing containerized FastAPI and PostgreSQL application stack to the Raspberry Pi and operate it reliably as a persistent service on the local network.
+
+The deployment should preserve the container architecture established in Phase 3, keep credentials outside Git, expose only the services that actually need LAN access, survive normal container and Raspberry Pi restarts, and provide documented procedures for deployment and basic operation.
+
 ### Deliverables
 
+- Raspberry Pi prepared to run Docker workloads
+- Docker Engine and Docker Compose available on the Raspberry Pi
+- Application repository deployed to the Raspberry Pi
+- Deployment-specific environment configuration stored outside Git
+- FastAPI, migration, and PostgreSQL services running on the Raspberry Pi
+- PostgreSQL accessible only where required by the application stack
+- FastAPI accessible from the trusted local network
+- Successful container operation on the Raspberry Pi architecture
+- Persistent PostgreSQL storage on the Raspberry Pi
+- Reliable application recovery after Raspberry Pi restart
+- Manual deployment and update workflow
+- Deployment validation from another machine on the local network
+- Raspberry Pi deployment and operational documentation
+
 ### Definition of Done
+
+- [ ] Docker Engine and Docker Compose run successfully on the Raspberry Pi
+- [ ] The repository can be deployed to the Raspberry Pi from a clean checkout
+- [ ] Deployment credentials and secrets are not committed to Git
+- [ ] The complete application stack builds and starts successfully on the Raspberry Pi
+- [ ] PostgreSQL becomes healthy before migrations run
+- [ ] Alembic migrations complete successfully before the backend starts
+- [ ] The FastAPI backend becomes healthy
+- [ ] The API can be reached from the Fedora development machine over the trusted LAN
+- [ ] PostgreSQL is not unnecessarily exposed to the local network
+- [ ] `GET /health` returns HTTP 200 from another LAN machine
+- [ ] Application CRUD operations work through the Raspberry Pi deployment
+- [ ] Application data persists after container restart
+- [ ] Application data persists after Raspberry Pi reboot
+- [ ] The application stack returns to a healthy state after a Raspberry Pi reboot
+- [ ] Logs and container status can be inspected on the Raspberry Pi
+- [ ] A manual application update/redeployment procedure has been verified
+- [ ] Raspberry Pi deployment, operation, and troubleshooting are documented
 
 ## Phase 5: Automation and CI/CD
 
