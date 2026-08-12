@@ -2,7 +2,7 @@
 
 ## Current Scope
 
-The current system is a containerized FastAPI backend application for managing internship applications.
+The current system is a containerized FastAPI backend application for managing internship applications, deployed as a persistent service on an ARM64 Raspberry Pi.
 
 The backend provides a REST API with complete CRUD operations. Application data is stored persistently in PostgreSQL and remains available when the application and database containers are restarted or recreated.
 
@@ -20,8 +20,11 @@ The current architecture includes:
 - Docker Compose for application orchestration and networking
 - Container health checks and startup dependencies
 - Automated unit, API, repository, PostgreSQL integration, and container smoke tests
+- ARM64 Raspberry Pi deployment
+- Deployment-specific host network bindings
+- Docker restart policies for long-running services
 
-Authentication, a frontend, Raspberry Pi deployment, and external services are not part of the current architecture.
+Authentication, a frontend, and external services are not part of the current architecture.
 
 ## Components
 
@@ -140,11 +143,19 @@ This separation allows the API contract and database representation to evolve in
 
 Database configuration is defined in `config.py`.
 
-`Settings` reads the database connection URL from the `DATABASE_URL` environment variable.
+`Settings` supports either a complete `DATABASE_URL` or individual PostgreSQL configuration values:
+
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `DATABASE_HOST`
+- `DATABASE_PORT`
+
+When a complete `DATABASE_URL` is not supplied, the application constructs the PostgreSQL connection URL using SQLAlchemy's `URL.create()`.
 
 Database credentials are therefore not hard-coded into the application source code.
 
-A local `.env` file can provide the development configuration, while `.env.example` documents the required variables without storing real credentials in Git.
+A local or deployment-specific `.env` file can provide configuration, while `.env.example` documents the expected variables without storing real credentials in Git.
 
 ### Database Engine and Sessions
 
@@ -244,9 +255,57 @@ The hostname `postgres` is the Docker Compose service name.
 
 Inside the backend container, `localhost` refers to the backend container itself and therefore cannot be used to reach PostgreSQL.
 
-The FastAPI container exposes port `8000` to the host so the API remains available at `127.0.0.1:8000`.
+The FastAPI container publishes port `8000` through the configurable `BACKEND_BIND_ADDRESS`.
+
+The default host binding is:
+
+```text
+127.0.0.1:8000
+```
+
+For the Raspberry Pi deployment, `BACKEND_BIND_ADDRESS` is set to the Raspberry Pi's trusted LAN address so the API can be reached by other devices on the local network.
+
+PostgreSQL remains published only on:
+
+```text
+127.0.0.1:5432
+```
+
+so the database is not directly exposed to the local network.
 
 The backend health check calls the `/health` endpoint from inside the container. PostgreSQL uses `pg_isready` for its health check.
+
+### Raspberry Pi Deployment Architecture
+
+The production-like homelab deployment runs the Docker Compose stack on an ARM64 Raspberry Pi running Ubuntu Server.
+
+The deployed request path is:
+
+```text
+LAN Client
+    |
+    | HTTP :8000
+    v
+Raspberry Pi
+    |
+    v
+FastAPI container
+    |
+    | Docker Compose network
+    v
+PostgreSQL container
+    |
+    v
+postgres_data named volume
+```
+
+The backend is exposed only through the Raspberry Pi's trusted LAN address.
+
+PostgreSQL is not directly exposed to LAN clients. The backend and migration services communicate with PostgreSQL through the internal Docker Compose network using `postgres:5432`.
+
+Deployment-specific credentials are stored in an untracked `.env` file on the Raspberry Pi.
+
+The `backend` and `postgres` services use `restart: unless-stopped`, allowing them to recover automatically when Docker starts after a normal Raspberry Pi reboot.
 
 ### PostgreSQL
 
@@ -511,7 +570,7 @@ This provides useful confidence without making the whole test suite dependent on
 
 ## Future Architecture
 
-The next phase focuses on deploying the containerized application stack to the Raspberry Pi.
+The next phase focuses on automation and CI/CD for the existing application and deployment workflow.
 
 Later phases may introduce:
 

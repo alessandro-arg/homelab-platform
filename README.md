@@ -10,7 +10,7 @@ Phase 2: Persistent Storage - **Completed**
 
 Phase 3: Containerization - **Completed**
 
-Phase 4: Raspberry Pi Deployment - **In Progress**
+Phase 4: Raspberry Pi Deployment - **Completed**
 
 The project currently provides:
 
@@ -30,6 +30,9 @@ The project currently provides:
 - Automatic Alembic migrations during container startup
 - Docker health checks for PostgreSQL and FastAPI
 - Automated container smoke validation
+- ARM64 Raspberry Pi deployment
+- Local-network access to the deployed FastAPI backend
+- Automatic backend and PostgreSQL recovery after Raspberry Pi reboot
 
 Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
