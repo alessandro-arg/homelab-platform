@@ -177,13 +177,72 @@ Phase 3 was completed with:
 
 The complete application backend can now be built and started with Docker Compose while preserving the API behavior and persistent storage established in the previous phases.
 
-## Phase 4: Raspberry Pi Deployment
+## Phase 4: Raspberry Pi Deployment - **Completed**
 
 ### Goal
 
-### Deliverables
+Deploy the existing containerized FastAPI and PostgreSQL application stack to the Raspberry Pi and operate it reliably as a persistent service on the local network.
+
+The deployment should preserve the container architecture established in Phase 3, keep credentials outside Git, expose only the services that actually need LAN access, survive normal container and Raspberry Pi restarts, and provide documented procedures for deployment and basic operation.
+
+### Completed Deliverables
+
+- Raspberry Pi prepared to run Docker workloads
+- Docker Engine and Docker Compose available on the Raspberry Pi
+- Application repository deployed to the Raspberry Pi
+- Deployment-specific environment configuration stored outside Git
+- FastAPI, migration, and PostgreSQL services running on the Raspberry Pi
+- PostgreSQL accessible only where required by the application stack
+- FastAPI accessible from the trusted local network
+- Successful container operation on the Raspberry Pi architecture
+- Persistent PostgreSQL storage on the Raspberry Pi
+- Reliable application recovery after Raspberry Pi restart
+- Manual deployment and update workflow
+- Deployment validation from another machine on the local network
+- Raspberry Pi deployment and operational documentation
 
 ### Definition of Done
+
+- [x] Docker Engine and Docker Compose run successfully on the Raspberry Pi
+- [x] The repository can be deployed to the Raspberry Pi from a clean checkout
+- [x] Deployment credentials and secrets are not committed to Git
+- [x] The complete application stack builds and starts successfully on the Raspberry Pi
+- [x] PostgreSQL becomes healthy before migrations run
+- [x] Alembic migrations complete successfully before the backend starts
+- [x] The FastAPI backend becomes healthy
+- [x] The API can be reached from the Fedora development machine over the trusted LAN
+- [x] PostgreSQL is not unnecessarily exposed to the local network
+- [x] `GET /health` returns HTTP 200 from another LAN machine
+- [x] Application CRUD operations work through the Raspberry Pi deployment
+- [x] Application data persists after container restart
+- [x] Application data persists after Raspberry Pi reboot
+- [x] The application stack returns to a healthy state after a Raspberry Pi reboot
+- [x] Logs and container status can be inspected on the Raspberry Pi
+- [x] A manual application update/redeployment procedure has been verified
+- [x] Raspberry Pi deployment, operation, and troubleshooting are documented
+
+### Phase 4 Result
+
+Phase 4 was completed with:
+
+- Docker Engine and Docker Compose running on the ARM64 Raspberry Pi
+- The application deployed from Git to `/opt/homelab-platform`
+- Deployment credentials stored in an untracked `.env` file
+- Native ARM64 backend container images
+- FastAPI exposed to the trusted local network
+- PostgreSQL restricted to the Raspberry Pi loopback interface
+- Automatic PostgreSQL health checking before migrations
+- Automatic Alembic migrations before normal backend startup
+- A persistent PostgreSQL named volume
+- Docker restart policies for the long-running `backend` and `postgres` services
+- Verified complete CRUD operations over the local network
+- Verified application persistence across backend restarts
+- Verified application persistence across a Raspberry Pi reboot
+- Verified automatic service recovery after a Raspberry Pi reboot
+- Verified manual Git pull and Docker Compose redeployment workflow
+- Raspberry Pi deployment and operational documentation
+
+The application backend now runs as a persistent self-hosted service on the Raspberry Pi while remaining accessible from trusted devices on the local network.
 
 ## Phase 5: Automation and CI/CD
 
