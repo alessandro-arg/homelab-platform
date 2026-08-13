@@ -260,7 +260,8 @@ The automated workflow must preserve the application architecture, persistent Po
 - GitHub-hosted runners for pull request and application validation
 - Automated fast and PostgreSQL integration tests
 - Automated Docker Compose and container smoke validation
-- A self-hosted GitHub Actions runner on the Raspberry Pi for deployment
+- GitHub-hosted deployment jobs connecting securely to the Raspberry Pi through Tailscale
+- Ephemeral Tailscale connectivity for deployment jobs
 - Deployment only from trusted changes on `main`
 - Existing Docker Compose deployment architecture retained
 - Existing Raspberry Pi `.env` retained outside Git
@@ -275,7 +276,7 @@ The automated workflow must preserve the application architecture, persistent Po
 - Automatic container smoke validation
 - CI execution for pull requests
 - CI execution for changes to `main`
-- Raspberry Pi self-hosted deployment runner
+- Secure GitHub Actions connectivity to the Raspberry Pi through Tailscale
 - Automatic deployment of successfully validated `main` changes
 - Automatic Alembic migration execution through the existing migration service
 - Post-deployment application health validation
@@ -306,8 +307,8 @@ The automated workflow must preserve the application architecture, persistent Po
 - [ ] The containerized application is automatically smoke-tested
 - [ ] Failed validation produces a failed GitHub check
 - [ ] Failed validation does not trigger Raspberry Pi deployment
-- [ ] A self-hosted GitHub Actions runner operates on the Raspberry Pi
-- [ ] The deployment runner starts automatically after Raspberry Pi reboot
+- [ ] GitHub Actions can securely reach the Raspberry Pi through Tailscale
+- [ ] Deployment connectivity does not require a persistent GitHub Actions runner on the Raspberry Pi
 - [ ] Successfully validated changes to `main` automatically update the Raspberry Pi deployment
 - [ ] Deployment preserves the existing Raspberry Pi `.env` configuration
 - [ ] Alembic migrations complete successfully during automated deployment
