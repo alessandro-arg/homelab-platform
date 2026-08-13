@@ -79,3 +79,26 @@ jobs:
 
       - name: Run PostgreSQL integration test
         run: python -m pytest -m integration -v
+
+  container-validation:
+    name: Container validation
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_USER: internship_tracker
+      POSTGRES_PASSWORD: container_test_password
+      POSTGRES_DB: internship_tracker
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config
+
+      - name: Validate containerized application
+        run: bash scripts/validate-containers.sh
+
+      - name: Clean up containers
+        if: always()
+        run: docker compose down -v --remove-orphans
