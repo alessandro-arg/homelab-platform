@@ -23,6 +23,12 @@ The current architecture includes:
 - ARM64 Raspberry Pi deployment
 - Deployment-specific host network bindings
 - Docker restart policies for long-running services
+- GitHub Actions continuous integration
+- GitHub-hosted validation runners
+- Ephemeral Tailscale connectivity for deployment
+- Automated Raspberry Pi deployment over OpenSSH
+- Exact-commit deployment verification
+- Automated post-deployment migration and health validation
 
 Authentication, a frontend, and external services are not part of the current architecture.
 
@@ -307,6 +313,70 @@ Deployment-specific credentials are stored in an untracked `.env` file on the Ra
 
 The `backend` and `postgres` services use `restart: unless-stopped`, allowing them to recover automatically when Docker starts after a normal Raspberry Pi reboot.
 
+### CI/CD Architecture
+
+Pull requests and pushes to `main` are validated using GitHub-hosted runners.
+
+The validation pipeline contains three independent jobs:
+
+- Fast Python tests
+- PostgreSQL integration testing
+- Docker Compose and container smoke validation
+
+Pull requests never receive deployment access.
+
+Deployment occurs only for successful pushes to `main`.
+
+The deployment path is:
+
+```text
+GitHub main
+    |
+    | push
+    v
+GitHub Actions
+    |
+    | validation succeeds
+    v
+Ephemeral Tailscale node
+    |
+    | TCP 22
+    v
+OpenSSH on Raspberry Pi
+    |
+    v
+/opt/homelab-platform
+    |
+    | exact commit verification
+    v
+Docker Compose
+    |
+    +--> Alembic migration
+    |
+    +--> FastAPI
+    |
+    v
+PostgreSQL named volume
+```
+
+The GitHub-hosted deployment runner authenticates to Tailscale using OpenID Connect workload identity rather than a persistent self-hosted GitHub runner.
+
+SSH uses a dedicated deployment key and strict host-key verification.
+
+The deployment script refuses to continue when:
+
+- the Raspberry Pi checkout is not on `main`
+- the checkout contains local changes
+- `origin/main` does not match the GitHub commit being deployed
+- the Git history cannot be fast-forwarded
+- Alembic migration fails
+- the backend does not become healthy
+- post-deployment API validation fails
+
+Deployment-specific credentials remain stored in the Raspberry Pi's untracked `.env` file.
+
+The PostgreSQL named volume is not removed during automated deployment.
+
 ### PostgreSQL
 
 PostgreSQL is the persistent data store.
@@ -570,11 +640,10 @@ This provides useful confidence without making the whole test suite dependent on
 
 ## Future Architecture
 
-The next phase focuses on automation and CI/CD for the existing application and deployment workflow.
+The next phase focuses on monitoring and operational visibility for the deployed homelab services.
 
 Later phases may introduce:
 
-- CI/CD
 - Monitoring
 - A web frontend
 - Authentication

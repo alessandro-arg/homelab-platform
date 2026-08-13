@@ -244,7 +244,7 @@ Phase 4 was completed with:
 
 The application backend now runs as a persistent self-hosted service on the Raspberry Pi while remaining accessible from trusted devices on the local network.
 
-## Phase 5: Automation and CI/CD
+## Phase 5: Automation and CI/CD - **Completed**
 
 ### Goal
 
@@ -299,24 +299,53 @@ The automated workflow must preserve the application architecture, persistent Po
 
 ### Definition of Done
 
-- [ ] Pull requests automatically trigger CI
-- [ ] Pushes to `main` automatically trigger CI
-- [ ] Fast tests run successfully in GitHub Actions
-- [ ] PostgreSQL integration tests run successfully in GitHub Actions
-- [ ] Docker Compose configuration is validated automatically
-- [ ] The containerized application is automatically smoke-tested
-- [ ] Failed validation produces a failed GitHub check
-- [ ] Failed validation does not trigger Raspberry Pi deployment
-- [ ] GitHub Actions can securely reach the Raspberry Pi through Tailscale
-- [ ] Deployment connectivity does not require a persistent GitHub Actions runner on the Raspberry Pi
-- [ ] Successfully validated changes to `main` automatically update the Raspberry Pi deployment
-- [ ] Deployment preserves the existing Raspberry Pi `.env` configuration
-- [ ] Alembic migrations complete successfully during automated deployment
-- [ ] The backend becomes healthy after automated deployment
-- [ ] `GET /health` returns HTTP `200` after automated deployment
-- [ ] PostgreSQL application data survives automated deployment
-- [ ] The manual deployment procedure remains available as a fallback
-- [ ] CI/CD setup, operation, and troubleshooting are documented
+- [x] Pull requests automatically trigger CI
+- [x] Pushes to `main` automatically trigger CI
+- [x] Fast tests run successfully in GitHub Actions
+- [x] PostgreSQL integration tests run successfully in GitHub Actions
+- [x] Docker Compose configuration is validated automatically
+- [x] The containerized application is automatically smoke-tested
+- [x] Failed validation produces a failed GitHub check
+- [x] Failed validation does not trigger Raspberry Pi deployment
+- [x] GitHub Actions can securely reach the Raspberry Pi through Tailscale
+- [x] Deployment connectivity does not require a persistent GitHub Actions runner on the Raspberry Pi
+- [x] Successfully validated changes to `main` automatically update the Raspberry Pi deployment
+- [x] Deployment preserves the existing Raspberry Pi `.env` configuration
+- [x] Alembic migrations complete successfully during automated deployment
+- [x] The backend becomes healthy after automated deployment
+- [x] `GET /health` returns HTTP `200` after automated deployment
+- [x] PostgreSQL application data survives automated deployment
+- [x] The manual deployment procedure remains available as a fallback
+- [x] CI/CD setup, operation, and troubleshooting are documented
+
+### Phase 5 Result
+
+Phase 5 was completed with:
+
+- GitHub Actions validation for pull requests and pushes to `main`
+- Automated fast Python tests
+- Automated PostgreSQL integration testing
+- Automated Docker Compose configuration validation
+- Automated container smoke testing
+- Deployment blocked when validation fails
+- Secure Raspberry Pi connectivity through ephemeral Tailscale GitHub Actions nodes
+- OpenID Connect workload identity for Tailscale authentication
+- Normal OpenSSH deployment over the encrypted Tailscale network
+- Dedicated SSH deployment credentials and strict host-key verification
+- Automatic deployment of validated `main` commits
+- Exact Git commit verification before deployment
+- Fast-forward-only Raspberry Pi repository updates
+- Automatic Docker Compose rebuild and deployment
+- Automatic Alembic migration verification
+- Automatic backend health and API validation
+- Preserved Raspberry Pi deployment configuration
+- Verified PostgreSQL persistence across automated redeployment
+- Verified repeatable deployment of the same commit
+- Retained manual deployment fallback procedure
+
+The application now has a complete CI/CD path from pull-request validation through automatic deployment to the Raspberry Pi.
+
+Untrusted pull-request code runs only on GitHub-hosted runners and cannot access the deployment path. Successfully validated changes merged into `main` are deployed through temporary Tailscale connectivity without requiring a persistent self-hosted GitHub Actions runner on the Raspberry Pi.
 
 ## Phase 6: Monitoring and Homelab Dashboard
 
