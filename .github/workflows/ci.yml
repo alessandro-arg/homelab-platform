@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  fast-tests:
+    name: Fast tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run fast tests
+        run: python -m pytest -m "not integration" -v
+
+  integration-tests:
+    name: PostgreSQL integration test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: internship_tracker
+          POSTGRES_PASSWORD: integration_test_password
+          POSTGRES_DB: internship_tracker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U internship_tracker -d internship_tracker_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://internship_tracker:integration_test_password@127.0.0.1:5432/internship_tracker_test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run PostgreSQL integration test
+        run: python -m pytest -m integration -v
+
+  container-validation:
+    name: Container validation
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_USER: internship_tracker
+      POSTGRES_PASSWORD: container_test_password
+      POSTGRES_DB: internship_tracker
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config
+
+      - name: Validate containerized application
+        run: bash scripts/validate-containers.sh
+
+      - name: Clean up containers
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+  deployment-connectivity:
+    name: Deployment connectivity
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - fast-tests
+      - integration-tests
+      - container-validation
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+          ping: ${{ secrets.CATO_TAILSCALE_IP }}
+
+      - name: Configure SSH
+        env:
+          CATO_SSH_PRIVATE_KEY: ${{ secrets.CATO_SSH_PRIVATE_KEY }}
+          CATO_SSH_KNOWN_HOSTS: ${{ secrets.CATO_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$CATO_SSH_PRIVATE_KEY" > ~/.ssh/cato_deploy
+          printf '%s\n' "$CATO_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/cato_deploy
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify deployment connectivity
+        env:
+          CATO_TAILSCALE_IP: ${{ secrets.CATO_TAILSCALE_IP }}
+        run: |
+          ssh \
+            -i ~/.ssh/cato_deploy \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            user@"$CATO_TAILSCALE_IP" \
+            'hostname && whoami'
