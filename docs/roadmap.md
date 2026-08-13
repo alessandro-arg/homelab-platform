@@ -287,7 +287,7 @@ The automated workflow must preserve the application architecture, persistent Po
 ### Non-Goals
 
 - Kubernetes
-- Container registry based deployment
+- Container registry-based deployment
 - Multi-architecture image publishing
 - Infrastructure as Code
 - Zero-downtime or blue-green deployment
