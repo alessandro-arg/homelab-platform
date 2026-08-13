@@ -102,3 +102,49 @@ jobs:
       - name: Clean up containers
         if: always()
         run: docker compose down -v --remove-orphans
+
+  deployment-connectivity:
+    name: Deployment connectivity
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - fast-tests
+      - integration-tests
+      - container-validation
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+          ping: ${{ secrets.CATO_TAILSCALE_IP }}
+
+      - name: Configure SSH
+        env:
+          CATO_SSH_PRIVATE_KEY: ${{ secrets.CATO_SSH_PRIVATE_KEY }}
+          CATO_SSH_KNOWN_HOSTS: ${{ secrets.CATO_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$CATO_SSH_PRIVATE_KEY" > ~/.ssh/cato_deploy
+          printf '%s\n' "$CATO_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/cato_deploy
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify deployment connectivity
+        env:
+          CATO_TAILSCALE_IP: ${{ secrets.CATO_TAILSCALE_IP }}
+        run: |
+          ssh \
+            -i ~/.ssh/cato_deploy \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            user@"$CATO_TAILSCALE_IP" \
+            'hostname && whoami'
