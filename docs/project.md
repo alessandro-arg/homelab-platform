@@ -19,15 +19,10 @@ Supporting multiple users is not part of the initial version.
 The first usable version must allow the user to:
 
 - Create an internship application
-
 - List all internship applications
-
 - View a single internship application
-
 - Update an internship application
-
 - Change the status of an application
-
 - Delete an internship application
 
 ## Non-Goals
@@ -35,20 +30,13 @@ The first usable version must allow the user to:
 The initial version will not include:
 
 - A graphical dashboard
-
 - Public internet access
-
 - Multiple users
-
 - Authentication
-
 - Email integration
-
 - Automatic reminders
-
-- Kubernetes
-
 - Advanced monitoring
+- Kubernetes
 
 These features may be considered in later project stages.
 
@@ -57,29 +45,17 @@ These features may be considered in later project stages.
 This project should help me learn:
 
 - Python application development
-
 - FastAPI fundamentals
-
 - REST API design
-
 - Input validation and error handling
-
 - Automated testing
-
 - Database integration
-
 - Git and structured commit workflows
-
 - Containerization with Podman
-
 - Linux service management
-
 - Deployment to my Raspberry Pi
-
 - Infrastructure automation
-
 - CI/CD fundamentals
-
 - Logging, monitoring, and documentation
 
 The long-term goal is to develop practical skills relevant to software development, DevOps, system administration, and cloud engineering.

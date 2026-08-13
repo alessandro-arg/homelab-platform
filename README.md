@@ -12,6 +12,8 @@ Phase 3: Containerization - **Completed**
 
 Phase 4: Raspberry Pi Deployment - **Completed**
 
+Phase 5: Automation and CI/CD - **Completed**
+
 The project currently provides:
 
 - A FastAPI REST API
@@ -33,6 +35,13 @@ The project currently provides:
 - ARM64 Raspberry Pi deployment
 - Local-network access to the deployed FastAPI backend
 - Automatic backend and PostgreSQL recovery after Raspberry Pi reboot
+- GitHub Actions continuous integration
+- Automatic fast and PostgreSQL integration testing
+- Automatic Docker Compose and container smoke validation
+- Secure GitHub Actions deployment through Tailscale
+- Automatic deployment of validated `main` changes to the Raspberry Pi
+- Exact-commit deployment verification
+- Post-deployment migration and health validation
 
 Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
@@ -54,12 +63,15 @@ Application data is stored persistently in PostgreSQL and remains available when
 - Build the application around persistent PostgreSQL storage
 - Containerize the application with Docker
 - Deploy it to a Raspberry Pi
-- Add automation, CI/CD, monitoring, and Kubernetes later
+- Add monitoring, a frontend, and Kubernetes in later phases
 
 ## Repository Structure
 
 ```text
 homelab-platform/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 ├── backend/
 │   ├── alembic.ini
 │   ├── Dockerfile
@@ -95,6 +107,7 @@ homelab-platform/
 │   ├── project.md
 │   └── roadmap.md
 ├── scripts/
+│   ├── deploy.sh
 │   └── validate-containers.sh
 ├── .env.example
 ├── compose.yaml
@@ -364,25 +377,67 @@ PostgreSQL remains bound to:
 
 and is not directly exposed to other LAN devices.
 
-### Updating the Deployment
+### Automatic Deployment
 
-Application changes are developed, tested, committed, and pushed from the development workstation.
+Changes merged into `main` are deployed automatically through GitHub Actions after validation succeeds.
 
-Update the Raspberry Pi deployment with:
+The deployment pipeline performs:
+
+```text
+Push to main
+    |
+    v
+Fast tests
+PostgreSQL integration test
+Container validation
+    |
+    | all validation succeeds
+    v
+Temporary Tailscale connection
+    |
+    v
+SSH to Raspberry Pi
+    |
+    v
+Verify clean deployment checkout
+    |
+    v
+Verify origin/main matches the validated GitHub commit
+    |
+    v
+Fast-forward deployment checkout
+    |
+    v
+docker compose up --build -d
+    |
+    v
+Verify Alembic migration
+    |
+    v
+Verify backend health
+    |
+    v
+Verify API endpoints
+```
+
+The Raspberry Pi deployment keeps its existing untracked `.env` file and persistent PostgreSQL named volume.
+
+A failed CI validation prevents the deployment job from running.
+
+### Manual Deployment Fallback
+
+If automated deployment is unavailable, the Raspberry Pi can still be updated manually:
 
 ```bash
 cd /opt/homelab-platform
 
 git status
-git pull
+git fetch origin main
+git merge --ff-only origin/main
 
 docker compose up --build -d
 docker compose ps -a
 ```
-
-`docker compose up --build -d` rebuilds changed application images and recreates services when required.
-
-The PostgreSQL named volume is preserved during normal redeployment.
 
 Do not use:
 
@@ -390,7 +445,44 @@ Do not use:
 docker compose down -v
 ```
 
-unless the persistent PostgreSQL data should intentionally be deleted.
+unless persistent PostgreSQL data should intentionally be destroyed.
+
+### CI/CD Troubleshooting
+
+If a deployment does not complete, first inspect the failed GitHub Actions job.
+
+A failed validation job prevents the deployment job from running.
+
+For deployment failures, check:
+
+- Whether the Tailscale connection succeeded
+- Whether SSH authentication succeeded
+- Whether the Raspberry Pi deployment checkout is clean and on `main`
+- Whether the deployed commit matches `origin/main`
+- Whether the migration service exited successfully
+- Whether PostgreSQL and the backend are healthy
+
+On the Raspberry Pi, inspect the deployment with:
+
+```bash
+cd /opt/homelab-platform
+
+git status
+git log -1 --oneline
+
+docker compose ps -a
+docker compose logs migrate
+docker compose logs backend
+docker compose logs postgres
+```
+
+Verify the API manually with:
+
+```bash
+curl --fail "http://<raspberry-pi-lan-ip>:8000/health"
+```
+
+Do not use `docker compose down -v` while troubleshooting unless deleting the PostgreSQL data is intentional.
 
 ### Reboot Recovery
 
@@ -508,9 +600,8 @@ docker compose -f ../compose.yaml rm -f postgres_test
 ## Current Limitations
 
 - Authentication and multiple users are not supported.
+- Monitoring and dashboards are not implemented yet.
 - A frontend is not included yet.
-- Deployment to the Raspberry Pi is not implemented yet.
-- CI/CD and monitoring are not implemented yet.
 
 ## Documentation
 
