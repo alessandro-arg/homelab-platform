@@ -99,6 +99,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate deployment script syntax
+        run: bash -n scripts/deploy.sh
+
       - name: Validate Docker Compose configuration
         run: docker compose config
 
@@ -109,8 +112,8 @@ jobs:
         if: always()
         run: docker compose down -v --remove-orphans
 
-  deployment-connectivity:
-    name: Deployment connectivity
+  deployment:
+    name: Deploy to cato
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - fast-tests
@@ -123,6 +126,11 @@ jobs:
       id-token: write
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -143,9 +151,10 @@ jobs:
           chmod 600 ~/.ssh/cato_deploy
           chmod 600 ~/.ssh/known_hosts
 
-      - name: Verify deployment connectivity
+      - name: Deploy application
         env:
           CATO_TAILSCALE_IP: ${{ secrets.CATO_TAILSCALE_IP }}
+          DEPLOY_SHA: ${{ github.sha }}
         run: |
           ssh \
             -i ~/.ssh/cato_deploy \
@@ -153,4 +162,5 @@ jobs:
             -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
             user@"$CATO_TAILSCALE_IP" \
-            'hostname && whoami'
+            "bash -s -- '$DEPLOY_SHA'" \
+            < scripts/deploy.sh
