@@ -248,9 +248,74 @@ The application backend now runs as a persistent self-hosted service on the Rasp
 
 ### Goal
 
+Automate validation and deployment of the existing application using GitHub Actions.
+
+Pull requests and changes to `main` should be validated automatically before deployment. Successfully validated changes merged into `main` should be deployed to the Raspberry Pi without requiring the normal manual update procedure.
+
+The automated workflow must preserve the application architecture, persistent PostgreSQL data, deployment-specific configuration, and migration behavior established in the previous phases.
+
+### Technical Direction
+
+- GitHub Actions for continuous integration
+- GitHub-hosted runners for pull request and application validation
+- Automated fast and PostgreSQL integration tests
+- Automated Docker Compose and container smoke validation
+- A self-hosted GitHub Actions runner on the Raspberry Pi for deployment
+- Deployment only from trusted changes on `main`
+- Existing Docker Compose deployment architecture retained
+- Existing Raspberry Pi `.env` retained outside Git
+- Existing manual deployment procedure retained as a fallback
+
 ### Deliverables
 
+- GitHub Actions continuous integration workflow
+- Automatic fast test execution
+- Automatic PostgreSQL integration test execution
+- Automatic Docker Compose configuration validation
+- Automatic container smoke validation
+- CI execution for pull requests
+- CI execution for changes to `main`
+- Raspberry Pi self-hosted deployment runner
+- Automatic deployment of successfully validated `main` changes
+- Automatic Alembic migration execution through the existing migration service
+- Post-deployment application health validation
+- Protection against deployment after failed validation
+- Documented CI/CD architecture and operating procedure
+- Documented manual deployment fallback procedure
+
+### Non-Goals
+
+- Kubernetes
+- Container registry based deployment
+- Multi-architecture image publishing
+- Infrastructure as Code
+- Zero-downtime or blue-green deployment
+- Automatic rollback
+- External secret-management systems
+- Monitoring and dashboards
+- Automated database backups
+- Public Internet exposure
+
 ### Definition of Done
+
+- [ ] Pull requests automatically trigger CI
+- [ ] Pushes to `main` automatically trigger CI
+- [ ] Fast tests run successfully in GitHub Actions
+- [ ] PostgreSQL integration tests run successfully in GitHub Actions
+- [ ] Docker Compose configuration is validated automatically
+- [ ] The containerized application is automatically smoke-tested
+- [ ] Failed validation produces a failed GitHub check
+- [ ] Failed validation does not trigger Raspberry Pi deployment
+- [ ] A self-hosted GitHub Actions runner operates on the Raspberry Pi
+- [ ] The deployment runner starts automatically after Raspberry Pi reboot
+- [ ] Successfully validated changes to `main` automatically update the Raspberry Pi deployment
+- [ ] Deployment preserves the existing Raspberry Pi `.env` configuration
+- [ ] Alembic migrations complete successfully during automated deployment
+- [ ] The backend becomes healthy after automated deployment
+- [ ] `GET /health` returns HTTP `200` after automated deployment
+- [ ] PostgreSQL application data survives automated deployment
+- [ ] The manual deployment procedure remains available as a fallback
+- [ ] CI/CD setup, operation, and troubleshooting are documented
 
 ## Phase 6: Monitoring and Homelab Dashboard
 
