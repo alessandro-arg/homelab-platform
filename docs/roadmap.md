@@ -410,30 +410,72 @@ The existing `/health` endpoint remains responsible for simple service health ch
 
 ### Definition of Done
 
-- [ ] FastAPI exposes Prometheus-compatible metrics through `/metrics`
-- [ ] Existing `/health` behavior remains unchanged
-- [ ] Existing backend tests continue to pass
-- [ ] Prometheus starts successfully through Docker Compose
-- [ ] Grafana starts successfully through Docker Compose
-- [ ] node_exporter exposes Raspberry Pi host metrics
-- [ ] cAdvisor exposes Docker container metrics
-- [ ] Prometheus successfully scrapes the FastAPI backend
-- [ ] Prometheus successfully scrapes node_exporter
-- [ ] Prometheus successfully scrapes cAdvisor
-- [ ] Prometheus successfully monitors itself
-- [ ] Grafana uses Prometheus as its configured data source
-- [ ] Grafana displays Raspberry Pi host metrics
-- [ ] Grafana displays Docker container metrics
-- [ ] Grafana displays FastAPI request and latency metrics
-- [ ] Grafana credentials are not committed to Git
-- [ ] Prometheus metric data survives container recreation
-- [ ] Grafana configuration and data survive container recreation
-- [ ] Monitoring services recover after a Raspberry Pi reboot
-- [ ] Only required monitoring interfaces are exposed to the trusted LAN
-- [ ] Existing PostgreSQL application data remains unaffected
-- [ ] Existing CI/CD deployment remains functional
-- [ ] Raspberry Pi monitoring resource usage is measured and documented
-- [ ] Monitoring architecture, operation, and troubleshooting are documented
+- [x] FastAPI exposes Prometheus-compatible metrics through `/metrics`
+- [x] Existing `/health` behavior remains unchanged
+- [x] Existing backend tests continue to pass
+- [x] Prometheus starts successfully through Docker Compose
+- [x] Grafana starts successfully through Docker Compose
+- [x] node_exporter exposes Raspberry Pi host metrics
+- [x] cAdvisor exposes Docker container metrics
+- [x] Prometheus successfully scrapes the FastAPI backend
+- [x] Prometheus successfully scrapes node_exporter
+- [x] Prometheus successfully scrapes cAdvisor
+- [x] Prometheus successfully monitors itself
+- [x] Grafana uses Prometheus as its configured data source
+- [x] Grafana displays Raspberry Pi host metrics
+- [x] Grafana displays Docker container metrics
+- [x] Grafana displays FastAPI request and latency metrics
+- [x] Grafana credentials are not committed to Git
+- [x] Prometheus metric data survives container recreation
+- [x] Grafana configuration and data survive container recreation
+- [x] Monitoring services recover after a Raspberry Pi reboot
+- [x] Only required monitoring interfaces are exposed to the trusted LAN
+- [x] Existing PostgreSQL application data remains unaffected
+- [x] Existing CI/CD deployment remains functional
+- [x] Raspberry Pi monitoring resource usage is measured and documented
+- [x] Monitoring architecture, operation, and troubleshooting are documented
+
+### Phase 6 Result
+
+Phase 6 was completed with:
+
+- Prometheus metrics collection and bounded local time-series storage
+- FastAPI Prometheus metrics exposed through `/metrics`
+- Health-check and metrics traffic excluded from application request statistics
+- Raspberry Pi host metrics collected through node_exporter
+- Docker container CPU, memory, and network metrics collected through cAdvisor
+- Prometheus self-monitoring
+- Grafana visualization available on the trusted local network
+- Provisioned Prometheus Grafana data source
+- Version-controlled Grafana dashboard provisioning
+- Version-controlled `Homelab Overview` dashboard using the Grafana V2 resource schema
+- Host CPU, memory, load, disk usage, and uptime visualization
+- Container CPU, memory, and network visualization
+- FastAPI request rate, status, latency, and process-memory visualization
+- Seven-day Prometheus retention with a 1 GiB storage limit
+- Persistent Prometheus and Grafana Docker volumes
+- Monitoring services isolated from unnecessary LAN exposure
+- Automatic Prometheus configuration reload during deployment
+- Monitoring-aware CI validation
+- Automatic deployment of the monitoring stack to the Raspberry Pi
+- Verified Prometheus and Grafana persistence across container recreation
+- Verified recovery of the complete monitoring stack after a Raspberry Pi reboot
+- Verified all Prometheus scrape targets recover successfully after reboot
+
+A point-in-time Raspberry Pi resource measurement showed approximately 348 MiB of memory used by the monitoring services:
+
+- Grafana: approximately 176 MiB
+- Prometheus: approximately 101 MiB
+- cAdvisor: approximately 62 MiB
+- node_exporter: approximately 9 MiB
+
+At the same measurement point, the monitoring containers used approximately 10% aggregate Docker CPU, primarily from cAdvisor. These values are operational snapshots rather than fixed resource limits.
+
+The monitoring stack provides historical visibility into the host, containers, and FastAPI application while preserving the existing `/health` endpoint for simple liveness checks.
+
+Prometheus, node_exporter, and cAdvisor remain unavailable directly from the trusted LAN. Grafana is the primary monitoring interface exposed to LAN clients.
+
+The complete monitoring stack and Grafana dashboard were verified to recover automatically after a Raspberry Pi reboot without manual intervention.
 
 ## Phase 7: Kubernetes
 
