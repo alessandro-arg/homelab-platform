@@ -351,9 +351,89 @@ Untrusted pull-request code runs only on GitHub-hosted runners and cannot access
 
 ### Goal
 
+Add lightweight monitoring and operational visibility to the Raspberry Pi deployment.
+
+The monitoring system should collect host, container, and FastAPI application metrics, retain recent metrics over time, and provide a Grafana dashboard for inspecting the health and behavior of the homelab platform.
+
+The existing `/health` endpoint remains responsible for simple service health checking, while metrics provide historical operational visibility.
+
+### Technical Direction
+
+- Prometheus for metrics collection and time-series storage
+- Grafana for dashboards and visualization
+- node_exporter for Raspberry Pi host metrics
+- cAdvisor for Docker container resource metrics
+- Prometheus-compatible FastAPI application metrics exposed through `/metrics`
+- Docker Compose for monitoring service orchestration
+- A dedicated Compose monitoring profile
+- Monitoring enabled on the Raspberry Pi through deployment-specific configuration
+- Internal Docker networking between monitoring components
+- Grafana exposed only to the trusted local network
+- Prometheus and exporter endpoints not unnecessarily exposed to the LAN
+- Persistent Docker volumes for Prometheus and Grafana data
+- Bounded Prometheus retention appropriate for the Raspberry Pi
+- Version-controlled Prometheus and Grafana configuration
+- Grafana credentials supplied through deployment-specific configuration outside Git
+- Existing application health checks and deployment architecture retained
+
 ### Deliverables
 
+- Prometheus service
+- Grafana service
+- node_exporter service
+- cAdvisor service
+- FastAPI `/metrics` endpoint
+- Prometheus scrape configuration for application, host, container, and Prometheus metrics
+- Persistent Prometheus metric storage
+- Persistent Grafana storage
+- Provisioned Grafana Prometheus data source
+- Version-controlled homelab Grafana dashboard
+- Raspberry Pi host metrics including CPU, memory, disk, load, uptime, and network activity
+- Docker container CPU, memory, and network metrics
+- FastAPI request count, status, and latency metrics
+- Monitoring deployment through the existing Docker Compose workflow
+- Documentation for starting, inspecting, operating, and troubleshooting monitoring
+
+### Non-Goals
+
+- Kubernetes
+- Loki or centralized log aggregation
+- Elasticsearch
+- OpenTelemetry
+- Distributed tracing
+- Alertmanager or automated alert delivery
+- Long-term remote metrics storage
+- High-availability monitoring
+- Deep PostgreSQL monitoring or postgres_exporter
+- A custom monitoring frontend
+- Public Internet exposure of monitoring services
+
 ### Definition of Done
+
+- [ ] FastAPI exposes Prometheus-compatible metrics through `/metrics`
+- [ ] Existing `/health` behavior remains unchanged
+- [ ] Existing backend tests continue to pass
+- [ ] Prometheus starts successfully through Docker Compose
+- [ ] Grafana starts successfully through Docker Compose
+- [ ] node_exporter exposes Raspberry Pi host metrics
+- [ ] cAdvisor exposes Docker container metrics
+- [ ] Prometheus successfully scrapes the FastAPI backend
+- [ ] Prometheus successfully scrapes node_exporter
+- [ ] Prometheus successfully scrapes cAdvisor
+- [ ] Prometheus successfully monitors itself
+- [ ] Grafana uses Prometheus as its configured data source
+- [ ] Grafana displays Raspberry Pi host metrics
+- [ ] Grafana displays Docker container metrics
+- [ ] Grafana displays FastAPI request and latency metrics
+- [ ] Grafana credentials are not committed to Git
+- [ ] Prometheus metric data survives container recreation
+- [ ] Grafana configuration and data survive container recreation
+- [ ] Monitoring services recover after a Raspberry Pi reboot
+- [ ] Only required monitoring interfaces are exposed to the trusted LAN
+- [ ] Existing PostgreSQL application data remains unaffected
+- [ ] Existing CI/CD deployment remains functional
+- [ ] Raspberry Pi monitoring resource usage is measured and documented
+- [ ] Monitoring architecture, operation, and troubleshooting are documented
 
 ## Phase 7: Kubernetes
 
