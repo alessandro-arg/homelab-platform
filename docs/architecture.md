@@ -2,7 +2,7 @@
 
 ## Current Scope
 
-The current system is a containerized FastAPI backend application for managing internship applications, deployed as a persistent service on an ARM64 Raspberry Pi.
+The current system is a containerized FastAPI backend application for managing internship applications, deployed as a persistent service on an ARM64 Raspberry Pi with an integrated monitoring stack for host, container, and application observability.
 
 The backend provides a REST API with complete CRUD operations. Application data is stored persistently in PostgreSQL and remains available when the application and database containers are restarted or recreated.
 
@@ -29,8 +29,17 @@ The current architecture includes:
 - Automated Raspberry Pi deployment over OpenSSH
 - Exact-commit deployment verification
 - Automated post-deployment migration and health validation
+- Prometheus metrics collection and time-series storage
+- FastAPI application metrics through `/metrics`
+- node_exporter for Raspberry Pi host metrics
+- cAdvisor for Docker container metrics
+- Grafana for monitoring visualization
+- Persistent Prometheus and Grafana storage
+- Version-controlled Prometheus and Grafana configuration
+- File-provisioned Grafana dashboards
+- Monitoring deployment through the existing Docker Compose and CI/CD workflow
 
-Authentication, a frontend, and external services are not part of the current architecture.
+Authentication, a frontend, centralized logging, distributed tracing, and Kubernetes are not part of the current architecture.
 
 ## Components
 
@@ -53,6 +62,13 @@ The API currently exposes:
 - `GET /applications/{application_id}`
 - `PUT /applications/{application_id}`
 - `DELETE /applications/{application_id}`
+- `GET /metrics`
+
+The `/metrics` endpoint exposes Prometheus-compatible application metrics.
+
+Metrics include request counts, HTTP status classes, request duration histograms, and Python process metrics.
+
+The `/health` and `/metrics` handlers are excluded from HTTP request statistics so Docker health checks and Prometheus scraping do not pollute application traffic metrics.
 
 The HTTP layer does not directly contain SQL or database-specific logic.
 
@@ -220,6 +236,15 @@ The normal application stack contains three services:
 
 A separate `postgres_test` service is available through the `test` Compose profile for isolated PostgreSQL integration testing.
 
+An optional `monitoring` Compose profile adds four long-running monitoring services:
+
+- `prometheus` - metrics collection and local time-series storage
+- `node_exporter` - Raspberry Pi host metrics
+- `cadvisor` - Docker container resource metrics
+- `grafana` - dashboards and visualization
+
+On the Raspberry Pi, `COMPOSE_PROFILES=monitoring` is configured in the deployment-specific `.env`, so the existing deployment workflow automatically includes the monitoring services.
+
 The normal startup sequence is:
 
 ```text
@@ -376,6 +401,176 @@ The deployment script refuses to continue when:
 Deployment-specific credentials remain stored in the Raspberry Pi's untracked `.env` file.
 
 The PostgreSQL named volume is not removed during automated deployment.
+
+### Monitoring Architecture
+
+The Raspberry Pi deployment includes a lightweight Prometheus-based monitoring stack.
+
+The metrics flow is:
+
+```text
+FastAPI /metrics ──────┐
+node_exporter ─────────┤
+cAdvisor ──────────────┼──> Prometheus ───> Grafana ───> LAN Client
+Prometheus ────────────┘
+```
+
+Prometheus collects four scrape targets:
+
+```text
+backend:8000
+prometheus:9090
+node_exporter:9100
+cadvisor:8080
+```
+
+Prometheus therefore monitors:
+
+- FastAPI application behavior
+- Raspberry Pi host resources
+- Docker container resources
+- Prometheus itself
+
+#### FastAPI Metrics
+
+FastAPI exposes Prometheus-compatible metrics through `/metrics`.
+
+Application metrics include:
+
+- HTTP request count
+- Request rate
+- HTTP status classes
+- Request duration histograms
+- Python process metrics
+
+The existing `/health` endpoint remains responsible for simple liveness checking.
+
+#### Host Metrics
+
+node_exporter observes the Raspberry Pi host using read-only host filesystem mounts for `/proc`, `/sys`, and the root filesystem.
+
+This provides host-level metrics including:
+
+- CPU
+- memory
+- filesystem usage
+- load
+- uptime
+- network activity
+
+node_exporter is reachable only through the internal Docker Compose network and does not publish a host port.
+
+#### Container Metrics
+
+cAdvisor observes the Docker runtime and exposes per-container metrics including:
+
+- CPU usage
+- memory usage
+- filesystem activity
+- network traffic
+
+Docker Compose service labels are retained in the metrics so Grafana can display readable service names such as `backend`, `postgres`, `prometheus`, and `grafana`.
+
+cAdvisor does not publish port `8080` to the host.
+
+#### Prometheus
+
+Prometheus stores recent metrics in the persistent `prometheus_data` Docker volume.
+
+Retention is bounded to:
+
+```text
+7 days
+1 GiB maximum
+```
+
+Prometheus is bound only to:
+
+```text
+127.0.0.1:9090
+```
+
+and is therefore not directly exposed to LAN clients.
+
+Prometheus configuration is stored in:
+
+```text
+monitoring/prometheus/prometheus.yml
+```
+
+The deployment script restarts Prometheus when monitoring is active so changes to the bind-mounted configuration are loaded during deployment.
+
+#### Grafana
+
+Grafana is the monitoring interface exposed to the trusted local network.
+
+The Raspberry Pi deployment binds Grafana through the configured `GRAFANA_BIND_ADDRESS` on port `3000`.
+
+Grafana uses the persistent `grafana_data` Docker volume.
+
+The Prometheus data source is provisioned from:
+
+```text
+monitoring/grafana/provisioning/datasources/prometheus.yml
+```
+
+Dashboard provisioning is configured through:
+
+```text
+monitoring/grafana/provisioning/dashboards/default.yml
+```
+
+The version-controlled dashboard is:
+
+```text
+monitoring/grafana/dashboards/homelab-overview.json
+```
+
+`Homelab Overview` uses the Grafana V2 resource schema and contains:
+
+- Raspberry Pi CPU, memory, load, root disk usage, and uptime
+- Docker container CPU, memory, and network usage
+- FastAPI request rate
+- HTTP status classes
+- request latency percentiles
+- FastAPI process memory
+
+The deployed dashboard is file-provisioned with UI updates disabled. Git is therefore the source of truth for the deployed dashboard.
+
+#### Monitoring Network Exposure
+
+The deployment intentionally exposes only the interfaces required by users:
+
+```text
+LAN:
+FastAPI     :8000
+Grafana     :3000
+
+Loopback only:
+PostgreSQL  :5432
+Prometheus  :9090
+
+Internal Docker network only:
+node_exporter :9100
+cAdvisor      :8080
+```
+
+This keeps raw monitoring endpoints unavailable directly from the trusted LAN while Grafana provides the intended visualization interface.
+
+#### Monitoring Persistence and Recovery
+
+Prometheus and Grafana data are stored in persistent Docker volumes.
+
+The monitoring services use Docker restart policies and were verified to recover automatically after a Raspberry Pi reboot.
+
+After reboot:
+
+- FastAPI returned healthy
+- Prometheus became ready
+- Grafana became available
+- node_exporter and cAdvisor restarted
+- all four Prometheus scrape targets returned `up = 1`
+- the provisioned Grafana dashboard became available without manual intervention
 
 ### PostgreSQL
 
@@ -640,11 +835,11 @@ This provides useful confidence without making the whole test suite dependent on
 
 ## Future Architecture
 
-The next phase focuses on monitoring and operational visibility for the deployed homelab services.
-
 Later phases may introduce:
 
-- Monitoring
 - A web frontend
 - Authentication
 - Kubernetes
+- Centralized logging
+- Alerting
+- Distributed tracing

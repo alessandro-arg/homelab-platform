@@ -14,6 +14,8 @@ Phase 4: Raspberry Pi Deployment - **Completed**
 
 Phase 5: Automation and CI/CD - **Completed**
 
+Phase 6: Monitoring and Homelab Dashboard - **Completed**
+
 The project currently provides:
 
 - A FastAPI REST API
@@ -42,19 +44,29 @@ The project currently provides:
 - Automatic deployment of validated `main` changes to the Raspberry Pi
 - Exact-commit deployment verification
 - Post-deployment migration and health validation
+- Prometheus metrics collection and bounded time-series retention
+- FastAPI application metrics through `/metrics`
+- Raspberry Pi host monitoring with node_exporter
+- Docker container monitoring with cAdvisor
+- Grafana dashboards on the trusted local network
+- Persistent Prometheus and Grafana storage
+- Provisioned Prometheus Grafana data source
+- Version-controlled `Homelab Overview` Grafana dashboard
+- Automatic monitoring-stack deployment through the existing CI/CD workflow
 
 Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
 ## Available API Endpoints
 
-| Method   | Endpoint                         | Description                          |
-| -------- | -------------------------------- | ------------------------------------ |
-| `GET`    | `/health`                        | Check whether the backend is healthy |
-| `POST`   | `/applications`                  | Create an internship application     |
-| `GET`    | `/applications`                  | List all internship applications     |
-| `GET`    | `/applications/{application_id}` | Retrieve one application             |
-| `PUT`    | `/applications/{application_id}` | Replace an existing application      |
-| `DELETE` | `/applications/{application_id}` | Delete an application                |
+| Method   | Endpoint                         | Description                               |
+| -------- | -------------------------------- | ----------------------------------------- |
+| `GET`    | `/health`                        | Check whether the backend is healthy      |
+| `POST`   | `/applications`                  | Create an internship application          |
+| `GET`    | `/applications`                  | List all internship applications          |
+| `GET`    | `/applications/{application_id}` | Retrieve one application                  |
+| `PUT`    | `/applications/{application_id}` | Replace an existing application           |
+| `DELETE` | `/applications/{application_id}` | Delete an application                     |
+| `GET`    | `/metrics`                       | Prometheus-compatible application metrics |
 
 ## Project Goals
 
@@ -63,7 +75,7 @@ Application data is stored persistently in PostgreSQL and remains available when
 - Build the application around persistent PostgreSQL storage
 - Containerize the application with Docker
 - Deploy it to a Raspberry Pi
-- Add monitoring, a frontend, and Kubernetes in later phases
+- Add a frontend and Kubernetes in later phases
 
 ## Repository Structure
 
@@ -106,6 +118,17 @@ homelab-platform/
 │   ├── domain-model.md
 │   ├── project.md
 │   └── roadmap.md
+├── monitoring/
+│   ├── prometheus/
+│   │   └── prometheus.yml
+│   └── grafana/
+│       ├── dashboards/
+│       │   └── homelab-overview.json
+│       └── provisioning/
+│           ├── dashboards/
+│           │   └── default.yml
+│           └── datasources/
+│               └── prometheus.yml
 ├── scripts/
 │   ├── deploy.sh
 │   └── validate-containers.sh
@@ -492,6 +515,134 @@ Docker starts automatically with Ubuntu, allowing the application stack to recov
 
 The PostgreSQL named volume preserves application data across container and host restarts.
 
+## Monitoring
+
+The optional monitoring stack runs through the Docker Compose `monitoring` profile.
+
+It contains:
+
+- `prometheus` - metrics collection and time-series storage
+- `node_exporter` - Raspberry Pi host metrics
+- `cadvisor` - Docker container metrics
+- `grafana` - dashboards and visualization
+
+FastAPI exposes Prometheus-compatible application metrics through:
+
+```text
+/metrics
+```
+
+The `/health` and `/metrics` endpoints are excluded from HTTP request statistics so health checks and Prometheus scraping do not appear as application traffic.
+
+### Monitoring Architecture
+
+```text
+FastAPI /metrics ──────┐
+node_exporter ─────────┤
+cAdvisor ──────────────┼──> Prometheus ───> Grafana
+Prometheus ────────────┘
+```
+
+Prometheus retains up to seven days of metrics with a maximum local storage size of 1 GiB.
+
+Prometheus and Grafana use persistent Docker volumes.
+
+### Start Monitoring
+
+Monitoring can be enabled explicitly with:
+
+```bash
+docker compose --profile monitoring up --build -d
+```
+
+On the Raspberry Pi, the deployment-specific `.env` contains:
+
+```text
+COMPOSE_PROFILES=monitoring
+```
+
+so the existing deployment workflow automatically includes the monitoring services.
+
+### Network Exposure
+
+The Raspberry Pi deployment exposes:
+
+```text
+FastAPI    <raspberry-pi-lan-ip>:8000
+Grafana    <raspberry-pi-lan-ip>:3000
+```
+
+The following interfaces are not exposed directly to the LAN:
+
+```text
+PostgreSQL   127.0.0.1:5432
+Prometheus   127.0.0.1:9090
+node_exporter internal Docker network only
+cAdvisor      internal Docker network only
+```
+
+### Grafana Dashboard
+
+Grafana uses a provisioned Prometheus data source.
+
+The `Homelab Overview` dashboard is stored in Git at:
+
+```text
+monitoring/grafana/dashboards/homelab-overview.json
+```
+
+and displays:
+
+- Raspberry Pi CPU, memory, load, root filesystem usage, and uptime
+- Container CPU, memory, and network activity
+- FastAPI request rate
+- HTTP status classes
+- Request latency percentiles
+- FastAPI process memory
+
+The dashboard is file-provisioned and cannot be permanently modified through the deployed Grafana UI.
+
+### Monitoring Troubleshooting
+
+Check monitoring services:
+
+```bash
+docker compose ps
+```
+
+Inspect logs:
+
+```bash
+docker compose logs prometheus
+docker compose logs grafana
+docker compose logs node_exporter
+docker compose logs cadvisor
+```
+
+Verify Prometheus readiness:
+
+```bash
+curl --fail http://127.0.0.1:9090/-/ready
+```
+
+Verify scrape targets:
+
+```bash
+curl --silent \
+  'http://127.0.0.1:9090/api/v1/query?query=up'
+```
+
+The expected monitored targets are:
+
+```text
+backend:8000
+prometheus:9090
+node_exporter:9100
+cadvisor:8080
+```
+
+All should report up = 1.
+
 ## Local Development
 
 ### Requirements
@@ -600,7 +751,6 @@ docker compose -f ../compose.yaml rm -f postgres_test
 ## Current Limitations
 
 - Authentication and multiple users are not supported.
-- Monitoring and dashboards are not implemented yet.
 - A frontend is not included yet.
 
 ## Documentation
