@@ -105,6 +105,17 @@ jobs:
       - name: Validate Docker Compose configuration
         run: docker compose config
 
+      - name: Validate monitoring Compose configuration
+        run: docker compose --profile monitoring config
+
+      - name: Validate Prometheus configuration
+        run: |
+          docker run --rm \
+            --entrypoint /bin/promtool \
+            -v "$PWD/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+            prom/prometheus:v3.13.1 \
+            check config /etc/prometheus/prometheus.yml
+
       - name: Validate containerized application
         run: bash scripts/validate-containers.sh
 
