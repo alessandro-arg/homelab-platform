@@ -43,6 +43,35 @@ fi
 echo "Building and starting application..."
 docker compose up --build -d
 
+if docker compose ps --services --status running | grep -qx prometheus; then
+    echo "Restarting Prometheus to load current configuration..."
+    docker compose restart prometheus
+
+    echo "Waiting for Prometheus readiness..."
+
+    prometheus_ready="false"
+
+    for _ in {1..30}; do
+        if curl \
+            --fail \
+            --silent \
+            --show-error \
+            "http://127.0.0.1:9090/-/ready" \
+            >/dev/null; then
+            prometheus_ready="true"
+            break
+        fi
+
+        sleep 1
+    done
+
+    if [[ "$prometheus_ready" != "true" ]]; then
+        echo "Prometheus did not become ready."
+        docker compose logs prometheus
+        exit 1
+    fi
+fi
+
 echo "Checking database migration..."
 
 migration_container="$(docker compose ps -a -q migrate)"
