@@ -101,6 +101,17 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro,rslave
 
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.5
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+
 volumes:
   postgres_data:
   prometheus_data:
