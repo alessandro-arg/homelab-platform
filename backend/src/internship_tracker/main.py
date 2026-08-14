@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from internship_tracker.dependencies import get_repository
 from internship_tracker.models import Application, ApplicationCreate
@@ -8,6 +9,13 @@ from internship_tracker.repository import ApplicationRepository
 
 
 app = FastAPI(title="Internship Application Tracker")
+
+Instrumentator(
+    excluded_handlers=["/metrics"],
+).instrument(app).expose(
+    app,
+    include_in_schema=False,
+)
 
 
 @app.get("/health")
