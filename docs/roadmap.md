@@ -477,10 +477,108 @@ Prometheus, node_exporter, and cAdvisor remain unavailable directly from the tru
 
 The complete monitoring stack and Grafana dashboard were verified to recover automatically after a Raspberry Pi reboot without manual intervention.
 
-## Phase 7: Kubernetes
+## Phase 7: Frontend Application UI
 
 ### Goal
 
+Build a small, polished frontend for the Internship Application Tracker so the application can be used through a normal web interface instead of primarily through Swagger or direct API requests.
+
+The frontend should run as part of the existing Raspberry Pi Docker Compose deployment and be accessible from trusted LAN devices.
+
+The browser should use a single frontend entry point. API requests should be proxied from the frontend service to the FastAPI backend through the internal Docker network rather than requiring clients to communicate with the backend directly.
+
+The phase should remain intentionally focused. The goal is to make the existing application practical to use while gaining more experience with Docker Compose, container networking, reverse proxying, deployment, and frontend operations.
+
+### Technical Direction
+
+- React with TypeScript for the frontend application
+- Vite for frontend development and production builds
+- Frontend hosted on the Raspberry Pi as a Docker container
+- Multi-stage frontend container build
+- Lightweight web server for serving the production frontend
+- Reverse proxy from `/api/*` requests to the FastAPI backend through the Docker network
+- A single trusted-LAN frontend entry point for normal application use
+- Existing FastAPI backend retained as the application API
+- Existing PostgreSQL storage retained unchanged
+- Existing Docker Compose deployment architecture extended with the frontend service
+- Existing GitHub Actions CI/CD pipeline extended to validate and deploy the frontend
+- Existing cAdvisor monitoring used to provide container-level visibility for the frontend
+- Responsive interface suitable for desktop and smaller screens
+- No public Internet exposure
+
 ### Deliverables
 
+- React and TypeScript frontend application
+- Vite-based frontend development and build configuration
+- Application overview with useful application counts
+- Application list
+- Application status display
+- Status filtering
+- Create-application interface
+- Edit-application interface
+- Delete-application workflow with confirmation
+- Loading state
+- Empty state
+- API error handling
+- Responsive application layout
+- Production frontend Docker image
+- Frontend service in Docker Compose
+- Internal frontend-to-backend Docker networking
+- Reverse proxy for frontend API requests
+- Trusted-LAN frontend access
+- Frontend build validation in CI
+- Automatic frontend deployment through the existing deployment workflow
+- Frontend container health check
+- Post-deployment frontend availability validation
+- Documentation for frontend architecture, development, deployment, and operation
+
+### Non-Goals
+
+- Kubernetes
+- Public Internet exposure
+- User accounts or multi-user support
+- Authentication or authorization
+- Tailscale remote application access
+- Internet-facing TLS termination
+- Server-side rendering
+- Next.js or another full-stack frontend framework
+- A separate frontend backend or API layer
+- Replacing the existing FastAPI API
+- Replacing PostgreSQL
+- Complex frontend state-management frameworks unless demonstrated necessary
+- Advanced analytics or reporting
+- Notifications
+- File uploads
+- Complex search
+- Pagination unless application scale demonstrates a need
+- A large design system or extensive animation framework
+
 ### Definition of Done
+
+- [ ] React and TypeScript frontend is implemented with Vite
+- [ ] Frontend can retrieve and display applications from FastAPI
+- [ ] Application overview displays useful status counts
+- [ ] Applications can be filtered by status
+- [ ] Applications can be created through the frontend
+- [ ] Applications can be edited through the frontend
+- [ ] Applications can be deleted through the frontend with confirmation
+- [ ] Loading, empty, and API-error states are handled
+- [ ] Frontend is usable on desktop and smaller screens
+- [ ] Frontend has a reproducible production Docker image
+- [ ] Frontend runs through the existing Docker Compose project
+- [ ] Frontend proxies API requests to FastAPI through the internal Docker network
+- [ ] Normal browser use requires only the frontend LAN entry point
+- [ ] Direct backend LAN exposure is removed after frontend proxying is verified
+- [ ] Existing backend and PostgreSQL behavior remains unchanged
+- [ ] Existing backend and integration tests continue to pass
+- [ ] Existing monitoring remains functional
+- [ ] Frontend container is visible through the existing container monitoring
+- [ ] CI validates the frontend production build
+- [ ] CI validates the frontend production container
+- [ ] Frontend container reports healthy through Docker Compose
+- [ ] Automated deployment verifies the frontend is reachable after deployment
+- [ ] Successfully validated frontend changes deploy automatically to the Raspberry Pi
+- [ ] Frontend and backend recover automatically after a Raspberry Pi reboot
+- [ ] PostgreSQL application data remains unaffected by frontend deployment
+- [ ] Frontend architecture, development, deployment, and operation are documented
+- [ ] No public Internet exposure is introduced
