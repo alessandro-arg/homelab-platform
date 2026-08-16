@@ -88,7 +88,7 @@ function ApplicationForm({
   }
 
   return (
-    <section className="create-application">
+    <section className="application-form">
       <div className="form-heading">
         <div>
           <h2>{title}</h2>

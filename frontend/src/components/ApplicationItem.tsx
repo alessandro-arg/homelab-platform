@@ -2,6 +2,7 @@ import type { Application } from "../types/application";
 
 interface ApplicationItemProps {
   application: Application;
+  onEdit: (application: Application) => void;
 }
 
 function formatStatus(status: Application["status"]) {
@@ -17,7 +18,7 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
-function ApplicationItem({ application }: ApplicationItemProps) {
+function ApplicationItem({ application, onEdit }: ApplicationItemProps) {
   return (
     <li className="application-item">
       <div className="application-primary">
@@ -31,6 +32,12 @@ function ApplicationItem({ application }: ApplicationItemProps) {
         </span>
 
         <span>{formatDate(application.application_date)}</span>
+      </div>
+
+      <div className="application-actions">
+        <button type="button" onClick={() => onEdit(application)}>
+          Edit
+        </button>
       </div>
 
       {(application.contact_person ||

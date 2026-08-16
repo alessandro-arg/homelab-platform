@@ -151,11 +151,16 @@ button {
   margin: 4px 0 0;
 }
 
-.create-application {
+.application-form {
   margin-top: 32px;
   padding: 24px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+}
+
+.application-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .form-heading {

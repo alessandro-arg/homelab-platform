@@ -5,6 +5,7 @@ import type { Application } from "./types/application";
 
 import CreateApplicationForm from "./components/CreateApplicationForm";
 import ApplicationItem from "./components/ApplicationItem";
+import EditApplicationForm from "./components/EditApplicationForm";
 
 import "./App.css";
 
@@ -14,6 +15,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingApplication, setEditingApplication] =
+    useState<Application | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,7 +60,13 @@ function App() {
           </p>
         </div>
 
-        <button type="button" onClick={() => setIsCreateOpen(true)}>
+        <button
+          type="button"
+          onClick={() => {
+            setEditingApplication(null);
+            setIsCreateOpen(true);
+          }}
+        >
           Add application
         </button>
       </header>
@@ -69,6 +78,24 @@ function App() {
             setIsCreateOpen(false);
           }}
           onCancel={() => setIsCreateOpen(false)}
+        />
+      )}
+
+      {editingApplication && (
+        <EditApplicationForm
+          application={editingApplication}
+          onUpdated={(updatedApplication) => {
+            setApplications((current) =>
+              current.map((application) =>
+                application.id === updatedApplication.id
+                  ? updatedApplication
+                  : application,
+              ),
+            );
+
+            setEditingApplication(null);
+          }}
+          onCancel={() => setEditingApplication(null)}
         />
       )}
 
@@ -95,7 +122,14 @@ function App() {
         {!isLoading && !error && applications.length > 0 && (
           <ul className="application-list">
             {applications.map((application) => (
-              <ApplicationItem key={application.id} application={application} />
+              <ApplicationItem
+                key={application.id}
+                application={application}
+                onEdit={(application) => {
+                  setIsCreateOpen(false);
+                  setEditingApplication(application);
+                }}
+              />
             ))}
           </ul>
         )}
