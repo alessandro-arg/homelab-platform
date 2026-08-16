@@ -22,3 +22,5 @@ export interface Application {
   job_url?: string | null;
   notes?: string | null;
 }
+
+export type ApplicationUpdate = ApplicationCreate;

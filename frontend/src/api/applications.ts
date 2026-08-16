@@ -1,4 +1,8 @@
-import type { Application, ApplicationCreate } from "../types/application";
+import type {
+  Application,
+  ApplicationCreate,
+  ApplicationUpdate,
+} from "../types/application";
 
 export async function getApplications(
   signal?: AbortSignal,
@@ -28,6 +32,27 @@ export async function createApplication(
   if (!response.ok) {
     throw new Error(
       `Failed to create application: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return response.json() as Promise<Application>;
+}
+
+export async function updateApplication(
+  id: number,
+  application: ApplicationUpdate,
+): Promise<Application> {
+  const response = await fetch(`/api/applications/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(application),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to update application: ${response.status} ${response.statusText}`,
     );
   }
 
