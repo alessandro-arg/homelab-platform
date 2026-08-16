@@ -4,21 +4,9 @@ import { getApplications } from "./api/applications";
 import type { Application } from "./types/application";
 
 import CreateApplicationForm from "./components/CreateApplicationForm";
+import ApplicationItem from "./components/ApplicationItem";
 
 import "./App.css";
-
-function formatStatus(status: Application["status"]) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${date}T00:00:00Z`));
-}
 
 function App() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -107,12 +95,7 @@ function App() {
         {!isLoading && !error && applications.length > 0 && (
           <ul className="application-list">
             {applications.map((application) => (
-              <li key={application.id}>
-                <strong>{application.company_name}</strong>
-                <span>{application.position_title ?? "No position title"}</span>
-                <span>{formatStatus(application.status)}</span>
-                <span>{formatDate(application.application_date)}</span>
-              </li>
+              <ApplicationItem key={application.id} application={application} />
             ))}
           </ul>
         )}

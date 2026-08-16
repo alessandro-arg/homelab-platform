@@ -79,13 +79,76 @@ button {
   list-style: none;
 }
 
-.application-list li {
+.application-item {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr;
   gap: 16px;
-  padding: 16px;
+  padding: 20px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+}
+
+.application-primary,
+.application-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.application-primary strong {
+  font-size: 1.05rem;
+}
+
+.application-primary span,
+.application-meta {
+  color: #6b7280;
+}
+
+.status {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status-applied {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status-interview {
+  background: #fefce8;
+  color: #a16207;
+}
+
+.status-rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.status-offer {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.application-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+}
+
+.application-details a {
+  color: #2563eb;
+}
+
+.application-details p {
+  flex-basis: 100%;
+  margin: 4px 0 0;
 }
 
 .create-application {
@@ -165,8 +228,11 @@ button:disabled {
     flex-direction: column;
   }
 
-  .application-list li {
-    grid-template-columns: 1fr;
+  .application-primary,
+  .application-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .form-grid {
