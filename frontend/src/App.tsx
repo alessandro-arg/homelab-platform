@@ -7,6 +7,10 @@ import CreateApplicationForm from "./components/CreateApplicationForm";
 import ApplicationItem from "./components/ApplicationItem";
 import EditApplicationForm from "./components/EditApplicationForm";
 
+import ApplicationOverview, {
+  type ApplicationFilter,
+} from "./components/ApplicationOverview";
+
 import "./App.css";
 
 function App() {
@@ -17,6 +21,14 @@ function App() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingApplication, setEditingApplication] =
     useState<Application | null>(null);
+
+  const [activeFilter, setActiveFilter] = useState<ApplicationFilter>("all");
+  const filteredApplications =
+    activeFilter === "all"
+      ? applications
+      : applications.filter(
+          (application) => application.status === activeFilter,
+        );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -99,6 +111,14 @@ function App() {
         />
       )}
 
+      {!isLoading && !error && applications.length > 0 && (
+        <ApplicationOverview
+          applications={applications}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+      )}
+
       <section className="applications" aria-labelledby="applications-heading">
         <h2 id="applications-heading">Applications</h2>
 
@@ -119,9 +139,19 @@ function App() {
           </div>
         )}
 
-        {!isLoading && !error && applications.length > 0 && (
+        {!isLoading &&
+          !error &&
+          applications.length > 0 &&
+          filteredApplications.length === 0 && (
+            <div className="empty-state">
+              <h3>No matching applications</h3>
+              <p>There are no applications with this status yet.</p>
+            </div>
+          )}
+
+        {!isLoading && !error && filteredApplications.length > 0 && (
           <ul className="application-list">
-            {applications.map((application) => (
+            {filteredApplications.map((application) => (
               <ApplicationItem
                 key={application.id}
                 application={application}

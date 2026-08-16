@@ -215,6 +215,33 @@ button {
   margin-top: 24px;
 }
 
+.application-overview {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.overview-card {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  background: #ffffff;
+}
+
+.overview-card strong {
+  font-size: 1.5rem;
+}
+
+.overview-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.overview-card-active {
+  border-color: #111827;
+}
+
 button:not(:disabled) {
   cursor: pointer;
 }
@@ -255,5 +282,9 @@ button:disabled {
 
   .form-actions button {
     width: 100%;
+  }
+
+  .application-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
