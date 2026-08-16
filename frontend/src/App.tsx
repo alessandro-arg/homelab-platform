@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getApplications } from "./api/applications";
+import { getApplications, deleteApplication } from "./api/applications";
 import type { Application } from "./types/application";
 
 import CreateApplicationForm from "./components/CreateApplicationForm";
@@ -128,6 +128,17 @@ function App() {
                 onEdit={(application) => {
                   setIsCreateOpen(false);
                   setEditingApplication(application);
+                }}
+                onDelete={async (application) => {
+                  await deleteApplication(application.id);
+
+                  setApplications((current) =>
+                    current.filter((item) => item.id !== application.id),
+                  );
+
+                  if (editingApplication?.id === application.id) {
+                    setEditingApplication(null);
+                  }
                 }}
               />
             ))}
