@@ -21,6 +21,7 @@ function EditApplicationForm({
 
   return (
     <ApplicationForm
+      key={application.id}
       title="Edit application"
       description={`Update the application for ${application.company_name}.`}
       submitLabel="Save changes"

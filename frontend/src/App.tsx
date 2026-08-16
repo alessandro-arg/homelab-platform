@@ -74,6 +74,7 @@ function App() {
 
         <button
           type="button"
+          disabled={isLoading}
           onClick={() => {
             setEditingApplication(null);
             setIsCreateOpen(true);
@@ -87,6 +88,7 @@ function App() {
         <CreateApplicationForm
           onCreated={(application) => {
             setApplications((current) => [application, ...current]);
+            setError(null);
             setIsCreateOpen(false);
           }}
           onCancel={() => setIsCreateOpen(false)}
