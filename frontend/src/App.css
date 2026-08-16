@@ -51,6 +51,43 @@ button {
   color: #6b7280;
 }
 
+.empty-state {
+  margin-top: 24px;
+  padding: 32px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.error-message {
+  margin-top: 24px;
+  color: #b91c1c;
+}
+
+.application-list {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.application-list li {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
 @media (max-width: 640px) {
   .app-shell {
     width: min(100% - 24px, 1120px);
@@ -59,5 +96,9 @@ button {
 
   .app-header {
     flex-direction: column;
+  }
+
+  .application-list li {
+    grid-template-columns: 1fr;
   }
 }
