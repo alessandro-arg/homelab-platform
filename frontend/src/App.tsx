@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { getApplications } from "./api/applications";
 import type { Application } from "./types/application";
 
+import CreateApplicationForm from "./components/CreateApplicationForm";
+
 import "./App.css";
 
 function formatStatus(status: Application["status"]) {
@@ -22,6 +24,8 @@ function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,10 +69,20 @@ function App() {
           </p>
         </div>
 
-        <button type="button" disabled>
+        <button type="button" onClick={() => setIsCreateOpen(true)}>
           Add application
         </button>
       </header>
+
+      {isCreateOpen && (
+        <CreateApplicationForm
+          onCreated={(application) => {
+            setApplications((current) => [application, ...current]);
+            setIsCreateOpen(false);
+          }}
+          onCancel={() => setIsCreateOpen(false)}
+        />
+      )}
 
       <section className="applications" aria-labelledby="applications-heading">
         <h2 id="applications-heading">Applications</h2>
