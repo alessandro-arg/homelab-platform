@@ -81,7 +81,37 @@ if [[ "$backend_status" != "healthy" ]]; then
     exit 1
 fi
 
-echo "Checking API endpoints..."
+echo "Waiting for frontend health..."
+
+frontend_status=""
+
+for _ in {1..30}; do
+    frontend_container="$(
+        docker compose ps -q frontend
+    )"
+
+    if [[ -n "$frontend_container" ]]; then
+        frontend_status="$(
+            docker inspect \
+                --format '{{.State.Health.Status}}' \
+                "$frontend_container"
+        )"
+    fi
+
+    if [[ "$frontend_status" == "healthy" ]]; then
+        break
+    fi
+
+    sleep 1
+done
+
+if [[ "$frontend_status" != "healthy" ]]; then
+    echo "Frontend did not become healthy."
+    docker compose logs frontend
+    exit 1
+fi
+
+echo "Checking backend API endpoints..."
 
 curl --fail --silent --show-error \
     http://127.0.0.1:8000/health \
@@ -89,6 +119,20 @@ curl --fail --silent --show-error \
 
 curl --fail --silent --show-error \
     http://127.0.0.1:8000/applications \
+    >/dev/null
+
+echo "Checking frontend application..."
+
+curl --fail --silent --show-error \
+    http://127.0.0.1:8080/ \
+    >/dev/null
+
+curl --fail --silent --show-error \
+    http://127.0.0.1:8080/api/health \
+    >/dev/null
+
+curl --fail --silent --show-error \
+    http://127.0.0.1:8080/api/applications \
     >/dev/null
 
 echo "Container validation passed."
