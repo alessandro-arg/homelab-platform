@@ -186,7 +186,7 @@ curl --fail --silent --show-error \
 
 echo "Checking frontend application..."
 
-frontend_address="$(docker compose port frontend 80)"
+frontend_address="$(docker compose port frontend 8080)"
 
 if [[ -z "$frontend_address" ]]; then
     echo "Frontend does not have a published port."

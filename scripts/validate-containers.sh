@@ -123,16 +123,24 @@ curl --fail --silent --show-error \
 
 echo "Checking frontend application..."
 
+frontend_address="$(docker compose port frontend 8080)"
+
+if [[ -z "$frontend_address" ]]; then
+    echo "Frontend does not have a published port."
+    docker compose ps frontend
+    exit 1
+fi
+
 curl --fail --silent --show-error \
-    http://127.0.0.1:8080/ \
+    "http://${frontend_address}/" \
     >/dev/null
 
 curl --fail --silent --show-error \
-    http://127.0.0.1:8080/api/health \
+    "http://${frontend_address}/api/health" \
     >/dev/null
 
 curl --fail --silent --show-error \
-    http://127.0.0.1:8080/api/applications \
+    "http://${frontend_address}/api/applications" \
     >/dev/null
 
 echo "Container validation passed."
