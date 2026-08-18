@@ -208,7 +208,11 @@ function ApplicationForm({
             Cancel
           </button>
 
-          <button type="submit" disabled={isSubmitting}>
+          <button
+            type="submit"
+            className="button-primary"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Saving..." : submitLabel}
           </button>
         </div>

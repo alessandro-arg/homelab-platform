@@ -560,7 +560,7 @@ The phase should remain intentionally focused. The goal is to make the existing 
 ### Definition of Done
 
 - [x] React and TypeScript frontend is implemented with Vite
-- [ ] Frontend visual design and interaction polish are completed
+- [x] Frontend visual design and interaction polish are completed
 - [x] Frontend can retrieve and display applications from FastAPI
 - [x] Application overview displays useful status counts
 - [x] Applications can be filtered by status

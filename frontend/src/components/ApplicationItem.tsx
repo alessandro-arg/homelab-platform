@@ -55,31 +55,40 @@ function ApplicationItem({
 
   return (
     <li className="application-item">
-      <div className="application-primary">
-        <strong>{application.company_name}</strong>
-        <span>{application.position_title ?? "No position title"}</span>
-      </div>
+      <div className="application-main">
+        <div className="application-title">
+          <strong>{application.company_name}</strong>
+          <span>{application.position_title ?? "No position title"}</span>
+        </div>
 
-      <div className="application-meta">
         <span className={`status status-${application.status}`}>
           {formatStatus(application.status)}
         </span>
-
-        <span>{formatDate(application.application_date)}</span>
       </div>
 
-      <div className="application-actions">
-        <button
-          type="button"
-          onClick={() => onEdit(application)}
-          disabled={isDeleting}
-        >
-          Edit
-        </button>
+      <div className="application-footer">
+        <span className="application-date">
+          {formatDate(application.application_date)}
+        </span>
 
-        <button type="button" onClick={handleDelete} disabled={isDeleting}>
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
+        <div className="application-actions">
+          <button
+            type="button"
+            onClick={() => onEdit(application)}
+            disabled={isDeleting}
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            className="button-danger"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+        </div>
       </div>
 
       {deleteError && (
