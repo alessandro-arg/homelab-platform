@@ -16,6 +16,8 @@ Phase 5: Automation and CI/CD - **Completed**
 
 Phase 6: Monitoring and Homelab Dashboard - **Completed**
 
+Phase 7: Frontend Application UI - **In Progress**
+
 The project currently provides:
 
 - A FastAPI REST API
@@ -27,16 +29,25 @@ The project currently provides:
 - Repository-based separation between API and storage logic
 - HTTP `404` handling for unknown applications
 - Interactive OpenAPI documentation through Swagger UI
+- A React and TypeScript frontend built with Vite
+- Internship application overview, filtering, and CRUD workflows
+- A production multi-stage frontend Docker image
+- Unprivileged Nginx serving the production frontend
+- Nginx reverse proxying `/api/*` requests to FastAPI
+- Docker-internal frontend-to-backend communication
+- A single trusted-LAN frontend entry point for normal application use
+- Frontend health checks and automated deployment validation
 - Automated testing with pytest
 - Isolated PostgreSQL integration testing
-- A containerized FastAPI backend
-- Docker Compose orchestration for FastAPI and PostgreSQL
+- Containerized React frontend and FastAPI backend
+- Docker Compose orchestration for the frontend, FastAPI, and PostgreSQL
 - Automatic Alembic migrations during container startup
-- Docker health checks for PostgreSQL and FastAPI
+- Docker health checks for PostgreSQL, FastAPI, and the frontend
 - Automated container smoke validation
 - ARM64 Raspberry Pi deployment
-- Local-network access to the deployed FastAPI backend
-- Automatic backend and PostgreSQL recovery after Raspberry Pi reboot
+- Local-network access to the deployed frontend
+- FastAPI restricted to the Raspberry Pi loopback interface
+- Automatic frontend, backend, PostgreSQL, and monitoring recovery after Raspberry Pi reboot
 - GitHub Actions continuous integration
 - Automatic fast and PostgreSQL integration testing
 - Automatic Docker Compose and container smoke validation
@@ -70,12 +81,15 @@ Application data is stored persistently in PostgreSQL and remains available when
 
 ## Project Goals
 
-- Build an internship application tracker
+- Build a complete internship application tracker
 - Learn backend development with Python and FastAPI
-- Build the application around persistent PostgreSQL storage
+- Build persistent application storage with PostgreSQL
+- Build a React and TypeScript frontend
 - Containerize the application with Docker
-- Deploy it to a Raspberry Pi
-- Add a frontend and Kubernetes in later phases
+- Deploy and operate it on a Raspberry Pi
+- Learn CI/CD, monitoring, networking, and self-hosting practices
+- Continue improving Docker and container operations before introducing Kubernetes
+- Evaluate Kubernetes later when it provides meaningful learning value
 
 ## Repository Structure
 
@@ -113,6 +127,14 @@ homelab-platform/
 │       ├── test_health.py
 │       ├── test_models.py
 │       └── test_sqlalchemy_repository.py
+├── frontend/
+│   ├── src/
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.ts
 ├── docs/
 │   ├── architecture.md
 │   ├── domain-model.md
@@ -141,11 +163,12 @@ homelab-platform/
 
 The complete application stack can run with Docker Compose.
 
-The stack contains:
+The normal application stack contains:
 
 - `postgres` - persistent PostgreSQL database
 - `migrate` - one-shot Alembic migration service
 - `backend` - FastAPI application
+- `frontend` - React application served by unprivileged Nginx
 - `postgres_test` - optional isolated PostgreSQL service for integration tests
 
 Start the application stack from the repository root:
@@ -169,6 +192,10 @@ FastAPI backend
     |
     | health check passes
     v
+Frontend / Nginx
+    |
+    | frontend health check passes
+    v
 Application ready
 ```
 
@@ -178,15 +205,22 @@ Check the current state:
 docker compose ps -a
 ```
 
-The backend is available at:
+When the Docker Compose stack is running locally, the frontend is available at:
+
+- Application UI: `http://127.0.0.1:8080`
+
+The backend remains available locally at:
 
 - Health check: `http://127.0.0.1:8000/health`
 - Interactive API documentation: `http://127.0.0.1:8000/docs`
 - OpenAPI schema: `http://127.0.0.1:8000/openapi.json`
 
+Normal browser use goes through the frontend. Requests under `/api/*` are proxied by Nginx to the FastAPI backend through the Docker Compose network.
+
 Inspect service logs:
 
 ```bash
+docker compose logs frontend
 docker compose logs backend
 docker compose logs migrate
 docker compose logs postgres
@@ -246,11 +280,14 @@ Run the automated container smoke validation from the repository root:
 
 The validation:
 
-1. Builds the backend image.
+1. Builds the backend and frontend images.
 2. Recreates the application containers.
-3. Waits for the FastAPI backend to become healthy.
-4. Verifies that Alembic migrations completed successfully.
-5. Checks the /health and /applications endpoints.
+3. Verifies that Alembic migrations completed successfully.
+4. Waits for the FastAPI backend to become healthy.
+5. Waits for the frontend container to become healthy.
+6. Checks the backend health and applications endpoints.
+7. Checks the frontend application entry point.
+8. Checks `/api/health` and `/api/applications` through the Nginx reverse proxy.
 
 The PostgreSQL named volume is preserved during validation.
 
@@ -324,8 +361,10 @@ The current homelab deployment uses:
 - Docker Engine and Docker Compose
 - A Git checkout at `/opt/homelab-platform`
 - A persistent PostgreSQL Docker volume
-- FastAPI exposed only on the trusted local network
+- Frontend exposed only on the trusted local network
+- FastAPI exposed only on the Raspberry Pi loopback interface
 - PostgreSQL exposed only on the Raspberry Pi loopback interface
+- Nginx proxying frontend `/api/*` requests to FastAPI through Docker networking
 
 ### Deployment Configuration
 
@@ -334,7 +373,8 @@ Create a deployment-specific `.env` file on the Raspberry Pi.
 The `.env` file is ignored by Git and must contain the real deployment credentials:
 
 ```text
-BACKEND_BIND_ADDRESS=<raspberry-pi-lan-ip>
+BACKEND_BIND_ADDRESS=127.0.0.1
+FRONTEND_BIND_ADDRESS=<raspberry-pi-lan-ip>
 
 POSTGRES_USER=tracker
 POSTGRES_PASSWORD=<strong-password>
@@ -380,16 +420,25 @@ The expected runtime state is:
 postgres   running and healthy
 migrate    exited successfully
 backend    running and healthy
+frontend   running and healthy
 ```
 
 ### Local Network Access
 
-The FastAPI backend is bound to the Raspberry Pi LAN address configured through `BACKEND_BIND_ADDRESS`.
+The frontend is the single application entry point for trusted devices on the local network.
 
-The API can therefore be accessed by trusted devices on the local network:
+It is bound to the Raspberry Pi LAN address through `FRONTEND_BIND_ADDRESS`:
 
 ```text
-http://<raspberry-pi-lan-ip>:8000
+http://<raspberry-pi-lan-ip>:8080
+```
+
+Browser API requests use `/api/*`. Nginx forwards those requests to the FastAPI `backend` service through the internal Docker Compose network.
+
+The backend remains bound to:
+
+```text
+127.0.0.1:8000
 ```
 
 PostgreSQL remains bound to:
@@ -398,7 +447,7 @@ PostgreSQL remains bound to:
 127.0.0.1:5432
 ```
 
-and is not directly exposed to other LAN devices.
+Neither FastAPI nor PostgreSQL is directly exposed to other LAN devices.
 
 ### Automatic Deployment
 
@@ -412,6 +461,7 @@ Push to main
     v
 Fast tests
 PostgreSQL integration test
+Frontend validation
 Container validation
     |
     | all validation succeeds
@@ -440,7 +490,13 @@ Verify Alembic migration
 Verify backend health
     |
     v
-Verify API endpoints
+Verify frontend health
+    |
+    v
+Verify backend API endpoints
+    |
+    v
+Verify frontend and proxied API endpoints
 ```
 
 The Raspberry Pi deployment keeps its existing untracked `.env` file and persistent PostgreSQL named volume.
@@ -483,7 +539,7 @@ For deployment failures, check:
 - Whether the Raspberry Pi deployment checkout is clean and on `main`
 - Whether the deployed commit matches `origin/main`
 - Whether the migration service exited successfully
-- Whether PostgreSQL and the backend are healthy
+- Whether PostgreSQL, the backend, and the frontend are healthy
 
 On the Raspberry Pi, inspect the deployment with:
 
@@ -495,6 +551,7 @@ git log -1 --oneline
 
 docker compose ps -a
 docker compose logs migrate
+docker compose logs frontend
 docker compose logs backend
 docker compose logs postgres
 ```
@@ -502,18 +559,18 @@ docker compose logs postgres
 Verify the API manually with:
 
 ```bash
-curl --fail "http://<raspberry-pi-lan-ip>:8000/health"
+curl --fail "http://<raspberry-pi-lan-ip>:8080/api/health"
 ```
 
 Do not use `docker compose down -v` while troubleshooting unless deleting the PostgreSQL data is intentional.
 
 ### Reboot Recovery
 
-The long-running `backend` and `postgres` services use Docker restart policies.
+The long-running `frontend`, `backend`, `postgres`, and monitoring services use Docker restart policies.
 
 Docker starts automatically with Ubuntu, allowing the application stack to recover after a normal Raspberry Pi reboot.
 
-The PostgreSQL named volume preserves application data across container and host restarts.
+The PostgreSQL named volume preserves application data across container and host restarts. Frontend, backend, PostgreSQL, and monitoring recovery after a Raspberry Pi reboot has been verified.
 
 ## Monitoring
 
@@ -568,13 +625,14 @@ so the existing deployment workflow automatically includes the monitoring servic
 The Raspberry Pi deployment exposes:
 
 ```text
-FastAPI    <raspberry-pi-lan-ip>:8000
+Frontend   <raspberry-pi-lan-ip>:8080
 Grafana    <raspberry-pi-lan-ip>:3000
 ```
 
 The following interfaces are not exposed directly to the LAN:
 
 ```text
+FastAPI      127.0.0.1:8000
 PostgreSQL   127.0.0.1:5432
 Prometheus   127.0.0.1:9090
 node_exporter internal Docker network only
@@ -648,6 +706,7 @@ All should report up = 1.
 ### Requirements
 
 - Python 3.12 or newer
+- Node.js with npm
 - Docker with Docker Compose
 
 ### Python Setup
@@ -711,6 +770,46 @@ The API is available at:
 - Health check: `http://127.0.0.1:8000/health`
 - Interactive API documentation: `http://127.0.0.1:8000/docs`
 - OpenAPI schema: `http://127.0.0.1:8000/openapi.json`
+
+### Run the Frontend
+
+With the backend running locally, install the frontend dependencies:
+
+```bash
+cd frontend
+npm ci
+```
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+The frontend uses relative `/api/*` requests. During development, the Vite dev server proxies these requests to the FastAPI backend and removes the `/api` prefix before forwarding them.
+
+By default, API requests are forwarded to:
+
+```text
+http://127.0.0.1:8000
+```
+
+To use a different backend address, create `frontend/.env.local`:
+
+```env
+API_PROXY_TARGET=http://<backend-address>:8000
+```
+
+For example, when developing the frontend against a backend running on another trusted machine, set `API_PROXY_TARGET` to that machine's reachable address.
+
+The local environment file is machine-specific and must not be committed to Git.
+
+Validate frontend changes before committing:
+
+```bash
+npm run lint
+npm run build
+```
 
 ### Run Tests
 

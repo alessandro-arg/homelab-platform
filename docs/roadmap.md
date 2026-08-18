@@ -495,9 +495,10 @@ The phase should remain intentionally focused. The goal is to make the existing 
 - Vite for frontend development and production builds
 - Frontend hosted on the Raspberry Pi as a Docker container
 - Multi-stage frontend container build
-- Lightweight web server for serving the production frontend
+- Unprivileged Nginx for serving the production frontend and reverse proxying API requests
 - Reverse proxy from `/api/*` requests to the FastAPI backend through the Docker network
 - A single trusted-LAN frontend entry point for normal application use
+- FastAPI restricted to the Raspberry Pi loopback interface after frontend proxying is verified
 - Existing FastAPI backend retained as the application API
 - Existing PostgreSQL storage retained unchanged
 - Existing Docker Compose deployment architecture extended with the frontend service
@@ -526,6 +527,9 @@ The phase should remain intentionally focused. The goal is to make the existing 
 - Internal frontend-to-backend Docker networking
 - Reverse proxy for frontend API requests
 - Trusted-LAN frontend access
+- Unprivileged Nginx production runtime
+- Direct backend LAN exposure removed
+- Polished frontend visual design and interaction styling
 - Frontend build validation in CI
 - Automatic frontend deployment through the existing deployment workflow
 - Frontend container health check
@@ -555,30 +559,31 @@ The phase should remain intentionally focused. The goal is to make the existing 
 
 ### Definition of Done
 
-- [ ] React and TypeScript frontend is implemented with Vite
-- [ ] Frontend can retrieve and display applications from FastAPI
-- [ ] Application overview displays useful status counts
-- [ ] Applications can be filtered by status
-- [ ] Applications can be created through the frontend
-- [ ] Applications can be edited through the frontend
-- [ ] Applications can be deleted through the frontend with confirmation
-- [ ] Loading, empty, and API-error states are handled
-- [ ] Frontend is usable on desktop and smaller screens
-- [ ] Frontend has a reproducible production Docker image
-- [ ] Frontend runs through the existing Docker Compose project
-- [ ] Frontend proxies API requests to FastAPI through the internal Docker network
-- [ ] Normal browser use requires only the frontend LAN entry point
-- [ ] Direct backend LAN exposure is removed after frontend proxying is verified
-- [ ] Existing backend and PostgreSQL behavior remains unchanged
-- [ ] Existing backend and integration tests continue to pass
-- [ ] Existing monitoring remains functional
-- [ ] Frontend container is visible through the existing container monitoring
-- [ ] CI validates the frontend production build
-- [ ] CI validates the frontend production container
-- [ ] Frontend container reports healthy through Docker Compose
-- [ ] Automated deployment verifies the frontend is reachable after deployment
-- [ ] Successfully validated frontend changes deploy automatically to the Raspberry Pi
-- [ ] Frontend and backend recover automatically after a Raspberry Pi reboot
-- [ ] PostgreSQL application data remains unaffected by frontend deployment
-- [ ] Frontend architecture, development, deployment, and operation are documented
-- [ ] No public Internet exposure is introduced
+- [x] React and TypeScript frontend is implemented with Vite
+- [ ] Frontend visual design and interaction polish are completed
+- [x] Frontend can retrieve and display applications from FastAPI
+- [x] Application overview displays useful status counts
+- [x] Applications can be filtered by status
+- [x] Applications can be created through the frontend
+- [x] Applications can be edited through the frontend
+- [x] Applications can be deleted through the frontend with confirmation
+- [x] Loading, empty, and API-error states are handled
+- [x] Frontend is usable on desktop and smaller screens
+- [x] Frontend has a reproducible production Docker image
+- [x] Frontend runs through the existing Docker Compose project
+- [x] Frontend proxies API requests to FastAPI through the internal Docker network
+- [x] Normal browser use requires only the frontend LAN entry point
+- [x] Direct backend LAN exposure is removed after frontend proxying is verified
+- [x] Existing backend and PostgreSQL behavior remains unchanged
+- [x] Existing backend and integration tests continue to pass
+- [x] Existing monitoring remains functional
+- [x] Frontend container is visible through the existing container monitoring
+- [x] CI validates the frontend production build
+- [x] CI validates the frontend production container
+- [x] Frontend container reports healthy through Docker Compose
+- [x] Automated deployment verifies the frontend is reachable after deployment
+- [x] Successfully validated frontend changes deploy automatically to the Raspberry Pi
+- [x] Frontend and backend recover automatically after a Raspberry Pi reboot
+- [x] PostgreSQL application data remains unaffected by frontend deployment
+- [x] Frontend architecture, development, deployment, and operation are documented
+- [x] No public Internet exposure is introduced
