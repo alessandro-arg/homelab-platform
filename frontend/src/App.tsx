@@ -74,6 +74,7 @@ function App() {
 
         <button
           type="button"
+          className="button-primary"
           disabled={isLoading}
           onClick={() => {
             setEditingApplication(null);
@@ -124,7 +125,12 @@ function App() {
       <section className="applications" aria-labelledby="applications-heading">
         <h2 id="applications-heading">Applications</h2>
 
-        {isLoading && <p>Loading applications...</p>}
+        {isLoading && (
+          <div className="loading-state" role="status">
+            <span className="loading-spinner" aria-hidden="true" />
+            <span>Loading applications...</span>
+          </div>
+        )}
 
         {!isLoading && error && (
           <p role="alert" className="error-message">
