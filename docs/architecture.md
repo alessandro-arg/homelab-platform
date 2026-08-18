@@ -2,12 +2,17 @@
 
 ## Current Scope
 
-The current system is a containerized FastAPI backend application for managing internship applications, deployed as a persistent service on an ARM64 Raspberry Pi with an integrated monitoring stack for host, container, and application observability.
+The current system is a containerized internship application tracker deployed as a persistent service on an ARM64 Raspberry Pi with an integrated monitoring stack for host, container, and application observability.
 
-The backend provides a REST API with complete CRUD operations. Application data is stored persistently in PostgreSQL and remains available when the application and database containers are restarted or recreated.
+The browser-facing application is a React and TypeScript frontend served by Nginx. Frontend API requests are reverse proxied to the FastAPI backend through the internal Docker Compose network. Application data is stored persistently in PostgreSQL and remains available when the application and database containers are restarted or recreated.
 
 The current architecture includes:
 
+- React and TypeScript for the browser-facing frontend
+- Vite for frontend development and production builds
+- Nginx for serving the production frontend
+- Nginx reverse proxying `/api/*` requests to FastAPI
+- Docker-internal frontend-to-backend communication
 - FastAPI for the HTTP API
 - Pydantic for API validation
 - A repository abstraction for data access
@@ -16,9 +21,10 @@ The current architecture includes:
 - Psycopg as the PostgreSQL driver
 - Alembic for database schema migrations
 - Dependency injection for repository and database-session management
-- Docker for the FastAPI application image
+- Docker for the frontend and FastAPI application images
 - Docker Compose for application orchestration and networking
 - Container health checks and startup dependencies
+- An unprivileged Nginx runtime for the frontend container
 - Automated unit, API, repository, PostgreSQL integration, and container smoke tests
 - ARM64 Raspberry Pi deployment
 - Deployment-specific host network bindings
@@ -28,7 +34,7 @@ The current architecture includes:
 - Ephemeral Tailscale connectivity for deployment
 - Automated Raspberry Pi deployment over OpenSSH
 - Exact-commit deployment verification
-- Automated post-deployment migration and health validation
+- Automated post-deployment migration, backend, and frontend validation
 - Prometheus metrics collection and time-series storage
 - FastAPI application metrics through `/metrics`
 - node_exporter for Raspberry Pi host metrics
@@ -39,15 +45,62 @@ The current architecture includes:
 - File-provisioned Grafana dashboards
 - Monitoring deployment through the existing Docker Compose and CI/CD workflow
 
-Authentication, a frontend, centralized logging, distributed tracing, and Kubernetes are not part of the current architecture.
+Authentication, centralized logging, distributed tracing, trusted remote application access, and Kubernetes are not part of the current architecture.
 
 ## Components
 
+### Frontend Application
+
+The browser-facing application is implemented with React and TypeScript and is located in the `frontend` directory.
+
+Vite is used for local frontend development and production builds.
+
+The frontend provides:
+
+- An overview of internship applications
+- Application status counts
+- Status-based filtering
+- Application creation
+- Application editing
+- Application deletion with confirmation
+- Loading, empty, and API-error states
+
+The frontend communicates with FastAPI through relative `/api/*` requests instead of depending directly on a backend host address.
+
+During local development, the Vite development server proxies `/api/*` requests to the configured backend target.
+
+In production, the compiled frontend is served by Nginx. Nginx:
+
+- Serves the static frontend assets
+- Provides fallback routing for the single-page application
+- Proxies `/api/*` requests to the FastAPI `backend` service
+- Uses Docker's internal DNS to resolve `backend`
+- Communicates with FastAPI over the Docker Compose network
+- Runs as the unprivileged `nginx` user
+
+The production request path is:
+
+```text
+Browser
+   |
+   | HTTP :8080
+   v
+Frontend / Nginx
+   |
+   | /api/*
+   | Docker Compose network
+   v
+FastAPI backend
+```
+
+The browser does not need direct access to the FastAPI container. On the Raspberry Pi deployment, normal application traffic enters through the frontend service while FastAPI remains bound to the host loopback interface.
+
 ### FastAPI Application
 
-The FastAPI application is defined in `main.py`:
+The FastAPI application is defined in `main.py` and acts as the application API behind the frontend:
 
 - Exposing HTTP endpoints
+- Receiving production application requests proxied by the frontend Nginx service
 - Receiving and validating request data
 - Calling the application repository
 - Converting repository results into HTTP responses
@@ -63,6 +116,21 @@ The API currently exposes:
 - `PUT /applications/{application_id}`
 - `DELETE /applications/{application_id}`
 - `GET /metrics`
+
+The backend API paths remain unchanged internally. In normal production browser use, Nginx exposes these application endpoints through the frontend `/api/*` path and removes the `/api` prefix before forwarding the request to FastAPI.
+
+For example:
+
+```text
+Browser request:
+GET /api/applications
+
+Nginx forwards:
+GET /applications
+
+FastAPI handles:
+GET /applications
+```
 
 The `/metrics` endpoint exposes Prometheus-compatible application metrics.
 
@@ -228,11 +296,12 @@ During isolated API tests, FastAPI's dependency override mechanism replaces the 
 
 The application runtime is orchestrated with Docker Compose.
 
-The normal application stack contains three services:
+The normal application stack contains four services:
 
 - `postgres` - persistent PostgreSQL database
-- `migrate` - Alembic migration service
+- `migrate` - one-shot Alembic migration service
 - `backend` - FastAPI application
+- `frontend` - React application served by Nginx
 
 A separate `postgres_test` service is available through the `test` Compose profile for isolated PostgreSQL integration testing.
 
@@ -261,6 +330,10 @@ FastAPI container
         |
         | health check succeeds
         v
+Frontend / Nginx container
+        |
+        | health check succeeds
+        v
 Application ready
 ```
 
@@ -268,85 +341,142 @@ The migration service is built from the same Dockerfile and application source a
 
 The backend does not start unless the migration service completes successfully.
 
+The frontend depends on the backend becoming healthy before it starts.
+
 Docker Compose provides an internal network and DNS resolution between services.
 
-Host-side development connects to PostgreSQL through:
+The main internal service communication paths are:
 
 ```text
-localhost:5432
+frontend -> backend:8000
+backend  -> postgres:5432
+migrate  -> postgres:5432
 ```
 
-Inside Docker Compose, the backend and migration services connect through:
+The frontend Nginx service uses the Docker Compose service name `backend` to reach FastAPI.
 
-```text
-postgres:5432
-```
+The backend and migration services use the Docker Compose service name `postgres` to reach PostgreSQL.
 
-The hostname `postgres` is the Docker Compose service name.
+Inside a container, `localhost` refers to that same container and cannot be used to reach another Compose service.
 
-Inside the backend container, `localhost` refers to the backend container itself and therefore cannot be used to reach PostgreSQL.
-
-The FastAPI container publishes port `8000` through the configurable `BACKEND_BIND_ADDRESS`.
-
-The default host binding is:
-
-```text
-127.0.0.1:8000
-```
-
-For the Raspberry Pi deployment, `BACKEND_BIND_ADDRESS` is set to the Raspberry Pi's trusted LAN address so the API can be reached by other devices on the local network.
-
-PostgreSQL remains published only on:
+For host-side development, PostgreSQL is available through:
 
 ```text
 127.0.0.1:5432
 ```
 
-so the database is not directly exposed to the local network.
+The FastAPI container publishes port `8000` through the configurable `BACKEND_BIND_ADDRESS`.
 
-The backend health check calls the `/health` endpoint from inside the container. PostgreSQL uses `pg_isready` for its health check.
+The default backend host binding is:
+
+```text
+127.0.0.1:8000
+```
+
+The frontend container listens on port `8080` and publishes that port through the configurable `FRONTEND_BIND_ADDRESS`.
+
+The default frontend host binding is:
+
+```text
+127.0.0.1:8080
+```
+
+On the Raspberry Pi deployment, the bindings are configured as:
+
+```text
+frontend   <raspberry-pi-lan-ip>:8080
+backend    127.0.0.1:8000
+postgres   127.0.0.1:5432
+```
+
+The frontend is therefore the normal trusted-LAN application entry point, while FastAPI and PostgreSQL are not directly exposed to other LAN devices.
+
+The frontend container runs Nginx as an unprivileged user and listens on the unprivileged container port `8080`.
+
+Service health is checked at multiple layers:
+
+- PostgreSQL uses `pg_isready`
+- FastAPI checks `/health` inside the backend container
+- The frontend checks `/api/health` through Nginx, which also verifies that the reverse proxy can reach FastAPI
 
 ### Raspberry Pi Deployment Architecture
 
-The production-like homelab deployment runs the Docker Compose stack on an ARM64 Raspberry Pi running Ubuntu Server.
+The homelab deployment runs the Docker Compose stack on an ARM64 Raspberry Pi running Ubuntu Server.
+
+The frontend is the normal application entry point for trusted devices on the local network.
 
 The deployed request path is:
 
 ```text
-LAN Client
-    |
-    | HTTP :8000
-    v
+Trusted LAN Client
+        |
+        | HTTP :8080
+        v
 Raspberry Pi
-    |
-    v
-FastAPI container
-    |
-    | Docker Compose network
-    v
+        |
+        v
+Frontend / Nginx container
+        |
+        | /api/*
+        | Docker Compose network
+        v
+FastAPI backend container
+        |
+        | postgres:5432
+        | Docker Compose network
+        v
 PostgreSQL container
-    |
-    v
+        |
+        v
 postgres_data named volume
 ```
 
-The backend is exposed only through the Raspberry Pi's trusted LAN address.
+The frontend is published through the Raspberry Pi's trusted LAN address on port `8080`.
 
-PostgreSQL is not directly exposed to LAN clients. The backend and migration services communicate with PostgreSQL through the internal Docker Compose network using `postgres:5432`.
+The backend is published only on the Raspberry Pi loopback interface:
 
-Deployment-specific credentials are stored in an untracked `.env` file on the Raspberry Pi.
+```text
+127.0.0.1:8000
+```
 
-The `backend` and `postgres` services use `restart: unless-stopped`, allowing them to recover automatically when Docker starts after a normal Raspberry Pi reboot.
+PostgreSQL is also published only on the Raspberry Pi loopback interface:
+
+```text
+127.0.0.1:5432
+```
+
+LAN clients therefore interact with the application through the frontend and cannot directly connect to FastAPI or PostgreSQL.
+
+Nginx forwards frontend `/api/*` requests to the FastAPI `backend` service through the internal Docker Compose network.
+
+The backend and migration services communicate with PostgreSQL through the same Compose network using:
+
+```text
+postgres:5432
+```
+
+Deployment-specific credentials and host bindings are stored in an untracked `.env` file on the Raspberry Pi.
+
+The long-running frontend, backend, PostgreSQL, and monitoring services use Docker restart policies so they recover automatically when Docker starts after a normal Raspberry Pi reboot.
+
+PostgreSQL application data is stored in the persistent `postgres_data` named volume and survives container recreation and Raspberry Pi restarts.
+
+Automatic frontend, backend, PostgreSQL, and monitoring recovery after a Raspberry Pi reboot has been verified.
 
 ### CI/CD Architecture
 
 Pull requests and pushes to `main` are validated using GitHub-hosted runners.
 
-The validation pipeline contains three independent jobs:
+The validation pipeline contains four independent jobs:
 
 - Fast Python tests
 - PostgreSQL integration testing
+- Frontend validation
 - Docker Compose and container smoke validation
+
+Frontend validation installs the frontend dependencies, runs Oxlint, and verifies that the production Vite build succeeds.
+
+Container validation builds and starts the application stack and verifies the backend, frontend, database migration, health checks, and frontend reverse-proxy path.
 
 Pull requests never receive deployment access.
 
@@ -378,13 +508,16 @@ Docker Compose
     |
     +--> Alembic migration
     |
-    +--> FastAPI
+    +--> PostgreSQL
     |
-    v
-PostgreSQL named volume
+    +--> FastAPI backend
+    |
+    +--> Frontend / Nginx
+    |
+    +--> Monitoring services
 ```
 
-The GitHub-hosted deployment runner authenticates to Tailscale using OpenID Connect workload identity rather than a persistent self-hosted GitHub runner.
+The GitHub-hosted deployment runner authenticates to Tailscale using OpenID Connect workload identity rather than requiring a persistent self-hosted GitHub runner on the Raspberry Pi.
 
 SSH uses a dedicated deployment key and strict host-key verification.
 
@@ -396,11 +529,16 @@ The deployment script refuses to continue when:
 - the Git history cannot be fast-forwarded
 - Alembic migration fails
 - the backend does not become healthy
-- post-deployment API validation fails
+- backend API validation fails
+- the frontend does not become healthy
+- the frontend application is not reachable
+- proxied `/api/health` or `/api/applications` validation fails
 
-Deployment-specific credentials remain stored in the Raspberry Pi's untracked `.env` file.
+The deployed frontend and backend therefore use the same application path that was validated before deployment.
 
-The PostgreSQL named volume is not removed during automated deployment.
+Deployment-specific credentials and host bindings remain stored in the Raspberry Pi's untracked `.env` file.
+
+The PostgreSQL named volume is not removed during automated deployment, so application data is preserved across deployments.
 
 ### Monitoring Architecture
 
@@ -428,7 +566,7 @@ Prometheus therefore monitors:
 
 - FastAPI application behavior
 - Raspberry Pi host resources
-- Docker container resources
+- Docker container resources, including the frontend container
 - Prometheus itself
 
 #### FastAPI Metrics
@@ -469,7 +607,9 @@ cAdvisor observes the Docker runtime and exposes per-container metrics including
 - filesystem activity
 - network traffic
 
-Docker Compose service labels are retained in the metrics so Grafana can display readable service names such as `backend`, `postgres`, `prometheus`, and `grafana`.
+The frontend container is automatically included in cAdvisor container metrics, so its CPU, memory, filesystem, and network activity are visible through the existing monitoring stack without requiring a separate frontend exporter.
+
+Docker Compose service labels are retained in the metrics so Grafana can display readable service names such as `frontend`, `backend`, `postgres`, `prometheus`, and `grafana`.
 
 cAdvisor does not publish port `8080` to the host.
 
