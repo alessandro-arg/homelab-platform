@@ -3,6 +3,10 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
+    networks:
+      - app
+      - data
+      - monitoring
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -30,6 +34,8 @@ services:
     build:
       context: ./frontend
     restart: unless-stopped
+    networks:
+      - app
     ports:
       - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:8080:8080"
     depends_on:
@@ -53,6 +59,8 @@ services:
   migrate:
     build:
       context: ./backend
+    networks:
+      - data
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -66,6 +74,8 @@ services:
   postgres:
     image: postgres:18
     restart: unless-stopped
+    networks:
+      - data
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -83,6 +93,8 @@ services:
   postgres_test:
     image: postgres:18
     profiles:
+      - test
+    networks:
       - test
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -103,6 +115,8 @@ services:
   prometheus:
     image: prom/prometheus:v3.13.1
     restart: unless-stopped
+    networks:
+      - monitoring
     profiles:
       - monitoring
     ports:
@@ -114,6 +128,8 @@ services:
   node_exporter:
     image: prom/node-exporter:v1.12.1
     restart: unless-stopped
+    networks:
+      - monitoring
     profiles:
       - monitoring
     command:
@@ -128,6 +144,8 @@ services:
   cadvisor:
     image: ghcr.io/google/cadvisor:v0.60.5
     restart: unless-stopped
+    networks:
+      - monitoring
     profiles:
       - monitoring
     volumes:
@@ -139,6 +157,8 @@ services:
   grafana:
     image: grafana/grafana:13.1.1
     restart: unless-stopped
+    networks:
+      - monitoring
     profiles:
       - monitoring
     environment:
@@ -152,6 +172,12 @@ services:
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+networks:
+  app:
+  data:
+  monitoring:
+  test:
 
 volumes:
   postgres_data:
