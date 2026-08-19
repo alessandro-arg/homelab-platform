@@ -587,3 +587,105 @@ The phase should remain intentionally focused. The goal is to make the existing 
 - [x] PostgreSQL application data remains unaffected by frontend deployment
 - [x] Frontend architecture, development, deployment, and operation are documented
 - [x] No public Internet exposure is introduced
+
+## Phase 8: Network Security and Private Remote Access
+
+### Goal
+
+Understand, verify, and strengthen the network security boundaries of the Raspberry Pi deployment, then provide secure remote access to the Internship Application Tracker through Tailscale without exposing the application publicly to the Internet.
+
+The phase should begin with observation rather than configuration changes. Existing host listeners, Docker-published ports, Docker-internal communication, LAN exposure, Tailscale connectivity, firewall state, and router exposure should be inspected and understood before deciding which security changes are necessary.
+
+The final architecture should preserve trusted LAN access while allowing authorized Tailscale devices to reach the frontend remotely. FastAPI, PostgreSQL, Prometheus, and exporter services should remain unavailable as normal client-facing services.
+
+The phase should also improve practical understanding of Linux networking, Docker Compose networking, service discovery, port publishing, network boundaries, private remote access, and least-privilege access control.
+
+### Technical Direction
+
+- Audit-first approach before making network or firewall changes
+- Linux socket and network-interface inspection on the Raspberry Pi
+- Docker Compose network and published-port inspection
+- Docker DNS and service-name resolution verification
+- Explicit documentation of container, host, LAN, Tailscale, and Internet network boundaries
+- Existing frontend retained as the normal application entry point
+- FastAPI retained as an internal application service
+- PostgreSQL retained as an internal data service
+- Prometheus and monitoring exporters retained without unnecessary client exposure
+- Review of Docker network segmentation where it provides meaningful isolation
+- Review and intentional configuration of Raspberry Pi host firewall behavior
+- Verification that the home router does not provide unintended public ingress
+- Tailscale for trusted remote application access
+- Private Tailscale HTTPS access where appropriate
+- Least-privilege Tailscale authorization for trusted users and devices
+- Existing GitHub Actions deployment connectivity through Tailscale retained
+- No public Internet application exposure
+
+### Deliverables
+
+- Raspberry Pi network-interface inventory
+- Raspberry Pi listening-port inventory
+- Docker published-port inventory
+- Docker-internal service communication map
+- Service exposure matrix covering loopback, LAN, Tailscale, and public Internet access
+- Verified Docker DNS and service-name communication
+- Documented frontend-to-backend and backend-to-PostgreSQL network paths
+- Review of unnecessary container-to-container connectivity
+- Docker network segmentation where justified by the audit
+- Raspberry Pi firewall review and intentional configuration
+- Home-router public-exposure verification
+- Tailscale configuration review
+- Private remote access to the frontend from trusted Tailscale devices
+- Tailscale access-control review and least-privilege authorization
+- Manual positive and negative network-access tests
+- Verification that existing CI/CD deployment through Tailscale remains functional
+- Updated network and security architecture documentation
+- Network-security troubleshooting and verification documentation
+
+### Non-Goals
+
+- Public Internet application exposure
+- Router port forwarding for the application
+- Tailscale Funnel
+- Public portfolio hosting
+- Kubernetes
+- Cloudflare Tunnel or another public ingress tunnel
+- Traefik or another general-purpose ingress platform
+- Application user accounts
+- Application authentication or authorization
+- Centralized logging
+- Distributed tracing
+- Automated backups
+- External secret-management platforms
+- Replacing Docker Compose
+- Replacing the existing frontend reverse proxy architecture
+
+### Definition of Done
+
+- [ ] Raspberry Pi network interfaces are inspected and understood
+- [ ] Host listening TCP and UDP ports are inventoried
+- [ ] Every Docker-published host port is identified and understood
+- [ ] Docker-internal-only service ports are identified
+- [ ] LAN-accessible services are explicitly documented
+- [ ] Loopback-only services are verified to remain inaccessible from another LAN machine
+- [ ] Docker DNS and service-name resolution are manually verified
+- [ ] Required container-to-container communication paths are documented
+- [ ] Unnecessary container communication is reduced where practical
+- [ ] Docker network segmentation is evaluated and implemented where it provides meaningful isolation
+- [ ] Raspberry Pi firewall state is reviewed and intentionally configured
+- [ ] Home-router configuration is checked for unintended application port forwarding
+- [ ] No application or monitoring service is unintentionally exposed to the public Internet
+- [ ] Tailscale configuration and existing deployment connectivity are reviewed
+- [ ] A trusted remote Tailscale device can securely reach the frontend
+- [ ] Remote application access does not require router port forwarding
+- [ ] Tailscale authorization is restricted appropriately for trusted access
+- [ ] FastAPI remains unavailable as a normal LAN or remote client-facing service
+- [ ] PostgreSQL remains unavailable to LAN and remote clients
+- [ ] Prometheus and monitoring exporters remain unavailable to normal LAN and remote clients
+- [ ] Existing trusted-LAN frontend access continues to work
+- [ ] Existing Grafana trusted-LAN access continues to work
+- [ ] Existing GitHub Actions deployment through Tailscale continues to work
+- [ ] Existing application and integration tests continue to pass
+- [ ] Existing monitoring remains functional
+- [ ] PostgreSQL application data remains unaffected
+- [ ] Positive and negative network-access cases are manually verified
+- [ ] Network security, private remote access, and troubleshooting procedures are documented
