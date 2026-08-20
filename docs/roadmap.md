@@ -661,31 +661,51 @@ The phase should also improve practical understanding of Linux networking, Docke
 
 ### Definition of Done
 
-- [ ] Raspberry Pi network interfaces are inspected and understood
-- [ ] Host listening TCP and UDP ports are inventoried
-- [ ] Every Docker-published host port is identified and understood
-- [ ] Docker-internal-only service ports are identified
-- [ ] LAN-accessible services are explicitly documented
-- [ ] Loopback-only services are verified to remain inaccessible from another LAN machine
-- [ ] Docker DNS and service-name resolution are manually verified
-- [ ] Required container-to-container communication paths are documented
-- [ ] Unnecessary container communication is reduced where practical
-- [ ] Docker network segmentation is evaluated and implemented where it provides meaningful isolation
-- [ ] Raspberry Pi firewall state is reviewed and intentionally configured
-- [ ] Home-router configuration is checked for unintended application port forwarding
-- [ ] No application or monitoring service is unintentionally exposed to the public Internet
-- [ ] Tailscale configuration and existing deployment connectivity are reviewed
-- [ ] A trusted remote Tailscale device can securely reach the frontend
-- [ ] Remote application access does not require router port forwarding
-- [ ] Tailscale authorization is restricted appropriately for trusted access
-- [ ] FastAPI remains unavailable as a normal LAN or remote client-facing service
-- [ ] PostgreSQL remains unavailable to LAN and remote clients
-- [ ] Prometheus and monitoring exporters remain unavailable to normal LAN and remote clients
-- [ ] Existing trusted-LAN frontend access continues to work
-- [ ] Existing Grafana trusted-LAN access continues to work
+- [x] Raspberry Pi network interfaces are inspected and understood
+- [x] Host listening TCP and UDP ports are inventoried
+- [x] Every Docker-published host port is identified and understood
+- [x] Docker-internal-only service ports are identified
+- [x] LAN-accessible services are explicitly documented
+- [x] Loopback-only services are verified to remain inaccessible from another LAN machine
+- [x] Docker DNS and service-name resolution are manually verified
+- [x] Required container-to-container communication paths are documented
+- [x] Unnecessary container communication is reduced where practical
+- [x] Docker network segmentation is evaluated and implemented where it provides meaningful isolation
+- [x] Raspberry Pi firewall state is reviewed and intentionally configured
+- [x] Home-router configuration is checked for unintended application port forwarding
+- [x] No application or monitoring service is unintentionally exposed to the public Internet
+- [x] Tailscale configuration and existing deployment connectivity are reviewed
+- [x] A trusted remote Tailscale device can securely reach the frontend
+- [x] Remote application access does not require router port forwarding
+- [x] Tailscale authorization is restricted appropriately for trusted access
+- [x] FastAPI remains unavailable as a normal LAN or remote client-facing service
+- [x] PostgreSQL remains unavailable to LAN and remote clients
+- [x] Prometheus and monitoring exporters remain unavailable to normal LAN and remote clients
+- [x] Existing trusted-LAN frontend access continues to work
+- [x] Existing Grafana trusted-LAN access continues to work
 - [ ] Existing GitHub Actions deployment through Tailscale continues to work
-- [ ] Existing application and integration tests continue to pass
-- [ ] Existing monitoring remains functional
-- [ ] PostgreSQL application data remains unaffected
-- [ ] Positive and negative network-access cases are manually verified
-- [ ] Network security, private remote access, and troubleshooting procedures are documented
+- [x] Existing application and integration tests continue to pass
+- [x] Existing monitoring remains functional
+- [x] PostgreSQL application data remains unaffected
+- [x] Positive and negative network-access cases are manually verified
+- [x] Network security, private remote access, and troubleshooting procedures are documented
+
+### Phase 8 Result So Far
+
+Phase 8 has established:
+
+- Audited Raspberry Pi interfaces, listening sockets, Docker ports, and network boundaries
+- Explicit Docker Compose segmentation across application, data, monitoring, and test networks
+- Verified removal of unnecessary frontend-to-database and frontend-to-monitoring connectivity
+- UFW deny-by-default host firewall policy
+- Key-only OpenSSH administration with password and root SSH login disabled
+- Unnecessary Avahi/mDNS service disabled
+- Trusted-LAN frontend and Grafana access preserved
+- FastAPI, PostgreSQL, and Prometheus retained as loopback-only host services
+- Private Tailscale Serve HTTPS access to the application
+- Verified remote application access from trusted devices outside the home LAN
+- Verified failure of the private application URL without Tailscale connectivity
+- Least-privilege Tailscale grants for frontend access, Fedora SSH administration, and GitHub Actions deployment
+- Verified absence of router port forwarding or public application ingress
+
+The remaining completion check is an automated deployment from `main` after the tightened Tailscale authorization policy.

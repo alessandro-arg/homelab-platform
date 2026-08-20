@@ -45,7 +45,7 @@ The current architecture includes:
 - File-provisioned Grafana dashboards
 - Monitoring deployment through the existing Docker Compose and CI/CD workflow
 
-Authentication, centralized logging, distributed tracing, trusted remote application access, and Kubernetes are not part of the current architecture.
+Centralized logging, distributed tracing, application authentication, automated backups, and Kubernetes are not part of the current architecture.
 
 ## Components
 
@@ -343,7 +343,7 @@ The backend does not start unless the migration service completes successfully.
 
 The frontend depends on the backend becoming healthy before it starts.
 
-Docker Compose provides an internal network and DNS resolution between services.
+Docker Compose provides explicit internal networks and DNS-based service discovery between services that share a network.
 
 The main internal service communication paths are:
 
@@ -353,7 +353,7 @@ backend  -> postgres:5432
 migrate  -> postgres:5432
 ```
 
-The frontend Nginx service uses the Docker Compose service name `backend` to reach FastAPI.
+The frontend Nginx service reaches FastAPI through the `app` Compose network using the service name `backend`.
 
 The backend and migration services use the Docker Compose service name `postgres` to reach PostgreSQL.
 
@@ -449,7 +449,7 @@ LAN clients therefore interact with the application through the frontend and can
 
 Nginx forwards frontend `/api/*` requests to the FastAPI `backend` service through the internal Docker Compose network.
 
-The backend and migration services communicate with PostgreSQL through the same Compose network using:
+The backend and migration services communicate with PostgreSQL through the `data` Compose network using:
 
 ```text
 postgres:5432
@@ -462,6 +462,185 @@ The long-running frontend, backend, PostgreSQL, and monitoring services use Dock
 PostgreSQL application data is stored in the persistent `postgres_data` named volume and survives container recreation and Raspberry Pi restarts.
 
 Automatic frontend, backend, PostgreSQL, and monitoring recovery after a Raspberry Pi reboot has been verified.
+
+### Network Security and Private Remote Access
+
+The Raspberry Pi deployment uses layered network controls rather than relying on a single security mechanism.
+
+The host network boundaries are:
+
+```text
+Public Internet
+    |
+    | no router port forwarding
+    v
+Home Router / NAT
+    |
+    +---------------- Trusted LAN ----------------+
+    |                                             |
+    | HTTP :8080                                  | HTTP :3000
+    v                                             v
+Frontend                                      Grafana
+
+Trusted remote device
+    |
+    | encrypted Tailscale connection
+    | HTTPS :443
+    v
+Tailscale Serve
+    |
+    | host loopback
+    | 127.0.0.1:8081
+    v
+Frontend / Nginx
+```
+
+The frontend has two intentional host entry points on the Raspberry Pi:
+
+```text
+192.168.188.170:8080 -> frontend:8080
+127.0.0.1:8081       -> frontend:8080
+```
+
+The LAN binding provides normal trusted-home-network access.
+
+The loopback binding is not directly accessible from other machines and exists as the local reverse-proxy target for Tailscale Serve.
+
+Tailscale Serve provides private HTTPS access through the tailnet. Tailscale Funnel is not enabled, and the application is not exposed publicly to the Internet.
+
+The backend, PostgreSQL, and Prometheus remain bound to Raspberry Pi loopback addresses:
+
+```text
+127.0.0.1:8000 -> FastAPI
+127.0.0.1:5432 -> PostgreSQL
+127.0.0.1:9090 -> Prometheus
+```
+
+Docker Compose uses explicit network segmentation:
+
+```text
+app:
+frontend <-> backend
+
+data:
+backend <-> postgres
+migrate <-> postgres
+
+monitoring:
+backend
+prometheus
+grafana
+node_exporter
+cadvisor
+
+test:
+postgres_test
+```
+
+Services are grouped onto explicit Docker networks according to their runtime roles. This reduces unnecessary cross-domain connectivity, including direct frontend access to PostgreSQL and Prometheus.
+
+The Raspberry Pi host uses UFW with:
+
+- Deny-by-default incoming traffic
+- Outgoing traffic allowed
+- SSH allowed from the trusted home LAN
+- Traffic arriving through `tailscale0` allowed
+- UDP port `41641` allowed for Tailscale direct connectivity
+
+Docker-published ports continue to be controlled primarily through explicit host bindings and Docker's own firewall/NAT rules.
+
+OpenSSH is hardened with:
+
+- Public-key authentication enabled
+- Password authentication disabled
+- Root SSH login disabled
+
+Manual administration from the Fedora development machine uses a dedicated SSH key.
+
+At home, normal SSH administration uses the Raspberry Pi LAN address.
+
+Away from home, administrative SSH can travel through Tailscale while still using normal OpenSSH key authentication.
+
+Tailscale authorization uses least-privilege grants:
+
+- Trusted personal tailnet members may reach the private frontend on TCP port `443`
+- The Fedora development machine may reach Raspberry Pi SSH on TCP port `22`
+- Ephemeral GitHub Actions nodes tagged `tag:github-actions` may reach Raspberry Pi SSH on TCP port `22`
+- Broad unrestricted tailnet access is not retained
+
+The FRITZ!Box does not contain application port-forwarding rules or an exposed-host configuration for the Raspberry Pi.
+
+#### Network Security Verification and Troubleshooting
+
+Useful Raspberry Pi checks:
+
+```bash
+# Inspect host listeners
+sudo ss -tulpn
+
+# Inspect firewall policy
+sudo ufw status verbose
+
+# Inspect Docker-published ports
+docker compose ps
+
+# Inspect Compose networks
+docker network ls
+docker network inspect homelab-platform_app
+docker network inspect homelab-platform_data
+docker network inspect homelab-platform_monitoring
+
+# Verify effective SSH hardening
+sudo sshd -T | grep -E \
+  'passwordauthentication|pubkeyauthentication|permitrootlogin'
+
+# Verify Tailscale state
+tailscale status
+sudo tailscale serve status
+```
+
+Expected Raspberry Pi application bindings include:
+
+```text
+192.168.188.170:8080  frontend LAN access
+127.0.0.1:8081        Tailscale Serve frontend target
+127.0.0.1:8000        FastAPI
+127.0.0.1:5432        PostgreSQL
+127.0.0.1:9090        Prometheus
+192.168.188.170:3000  Grafana LAN access
+```
+
+From a trusted LAN client:
+
+```bash
+curl http://192.168.188.170:8080/api/health
+```
+
+should succeed, while direct LAN access to FastAPI and PostgreSQL should fail:
+
+```bash
+curl --connect-timeout 3 http://192.168.188.170:8000/health
+nc -zv -w3 192.168.188.170 5432
+```
+
+For private remote access, with Tailscale connected:
+
+```bash
+curl https://cato.tail20b02c.ts.net/api/health
+```
+
+should succeed.
+
+With Tailscale disconnected, the private `.ts.net` application endpoint should not be reachable.
+
+If private access fails:
+
+1. Verify the client is connected to Tailscale.
+2. Verify `cato` appears online in `tailscale status`.
+3. Verify `tailscale ping cato` succeeds.
+4. Verify `sudo tailscale serve status` still proxies to `http://127.0.0.1:8081`.
+5. Verify `curl http://127.0.0.1:8081/api/health` succeeds directly on the Raspberry Pi.
+6. Verify the relevant Tailscale grant allows the client to reach `cato` on the required port.
 
 ### CI/CD Architecture
 
