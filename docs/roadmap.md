@@ -347,7 +347,7 @@ The application now has a complete CI/CD path from pull-request validation throu
 
 Untrusted pull-request code runs only on GitHub-hosted runners and cannot access the deployment path. Successfully validated changes merged into `main` are deployed through temporary Tailscale connectivity without requiring a persistent self-hosted GitHub Actions runner on the Raspberry Pi.
 
-## Phase 6: Monitoring and Homelab Dashboard
+## Phase 6: Monitoring and Homelab Dashboard - **Completed**
 
 ### Goal
 
@@ -477,7 +477,7 @@ Prometheus, node_exporter, and cAdvisor remain unavailable directly from the tru
 
 The complete monitoring stack and Grafana dashboard were verified to recover automatically after a Raspberry Pi reboot without manual intervention.
 
-## Phase 7: Frontend Application UI
+## Phase 7: Frontend Application UI - **Completed**
 
 ### Goal
 
@@ -588,7 +588,7 @@ The phase should remain intentionally focused. The goal is to make the existing 
 - [x] Frontend architecture, development, deployment, and operation are documented
 - [x] No public Internet exposure is introduced
 
-## Phase 8: Network Security and Private Remote Access
+## Phase 8: Network Security and Private Remote Access - **Completed**
 
 ### Goal
 
@@ -683,14 +683,14 @@ The phase should also improve practical understanding of Linux networking, Docke
 - [x] Prometheus and monitoring exporters remain unavailable to normal LAN and remote clients
 - [x] Existing trusted-LAN frontend access continues to work
 - [x] Existing Grafana trusted-LAN access continues to work
-- [ ] Existing GitHub Actions deployment through Tailscale continues to work
+- [x] Existing GitHub Actions deployment through Tailscale continues to work
 - [x] Existing application and integration tests continue to pass
 - [x] Existing monitoring remains functional
 - [x] PostgreSQL application data remains unaffected
 - [x] Positive and negative network-access cases are manually verified
 - [x] Network security, private remote access, and troubleshooting procedures are documented
 
-### Phase 8 Result So Far
+### Phase 8 Result
 
 Phase 8 has established:
 
@@ -708,4 +708,4 @@ Phase 8 has established:
 - Least-privilege Tailscale grants for frontend access, Fedora SSH administration, and GitHub Actions deployment
 - Verified absence of router port forwarding or public application ingress
 
-The remaining completion check is an automated deployment from `main` after the tightened Tailscale authorization policy.
+Phase 8 is complete. The Raspberry Pi now has documented and verified network boundaries, segmented Docker networking, hardened host access, private remote application access through Tailscale, and least-privilege authorization without introducing public Internet exposure.
