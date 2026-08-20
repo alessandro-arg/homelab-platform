@@ -143,4 +143,10 @@ curl --fail --silent --show-error \
     "http://${frontend_address}/api/applications" \
     >/dev/null
 
+echo "Checking loopback frontend entry point..."
+
+curl --fail --silent --show-error \
+    http://127.0.0.1:8081/api/health \
+    >/dev/null
+
 echo "Container validation passed."
