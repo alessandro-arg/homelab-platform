@@ -18,6 +18,8 @@ Phase 6: Monitoring and Homelab Dashboard - **Completed**
 
 Phase 7: Frontend Application UI - **Completed**
 
+Phase 8: Network Security and Private Remote Access - **In Progress**
+
 The project currently provides:
 
 - A FastAPI REST API
@@ -35,7 +37,7 @@ The project currently provides:
 - Unprivileged Nginx serving the production frontend
 - Nginx reverse proxying `/api/*` requests to FastAPI
 - Docker-internal frontend-to-backend communication
-- A single trusted-LAN frontend entry point for normal application use
+- Trusted-LAN frontend access plus private Tailscale HTTPS access
 - Frontend health checks and automated deployment validation
 - Automated testing with pytest
 - Isolated PostgreSQL integration testing
@@ -64,6 +66,15 @@ The project currently provides:
 - Provisioned Prometheus Grafana data source
 - Version-controlled `Homelab Overview` Grafana dashboard
 - Automatic monitoring-stack deployment through the existing CI/CD workflow
+- Explicit Docker Compose network segmentation for application, data, monitoring, and test traffic
+- Reduced unnecessary container-to-container reachability
+- Raspberry Pi host firewall with deny-by-default incoming policy
+- SSH public-key authentication for manual administration
+- SSH password authentication and root SSH login disabled
+- Private Tailscale HTTPS access to the frontend
+- Tailscale Serve proxying through a loopback-only frontend entry point
+- Least-privilege Tailscale grants for personal frontend access, Fedora administration, and GitHub Actions deployment
+- No application router port forwarding or public Internet ingress
 
 Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
