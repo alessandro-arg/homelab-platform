@@ -1,6 +1,16 @@
-# Homelab Platform
+<p align="center">
+  <img
+    alt="Homelab Platform header"
+    src="https://shieldcn.dev/header/surface.svg?title=Homelab+Platform&amp;subtitle=A+self-hosted+full-stack+platform+built+on+Raspberry+Pi+with+CI%2FCD%2C+monitoring+and+private+networking.&amp;logo=https%3A%2F%2Fcdn.simpleicons.org%2Fraspberrypi%2Fffffff&amp;mode=dark&amp;font=geist"
+  />
+</p>
 
-A self-hosted platform for managing internship applications and, later, homelab services.
+<p align="center">
+  <img alt="Self-Hosted" src="https://shieldcn.dev/badge/Self-Hosted.svg?variant=outline&amp;font=geist" />
+  <img alt="FastAPI" src="https://shieldcn.dev/badge/FastAPI.svg?variant=outline&amp;font=geist&amp;logo=fastapi" />
+  <img alt="Docker" src="https://shieldcn.dev/badge/Docker.svg?variant=outline&amp;font=geist&amp;logo=docker" />
+  <img alt="Raspberry Pi" src="https://shieldcn.dev/badge/Raspberry_Pi.svg?variant=outline&amp;font=geist&amp;logo=raspberrypi" />
+</p>
 
 ## Current Status
 
