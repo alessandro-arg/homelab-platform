@@ -709,3 +709,125 @@ Phase 8 has established:
 - Verified absence of router port forwarding or public application ingress
 
 Phase 8 is complete. The Raspberry Pi now has documented and verified network boundaries, segmented Docker networking, hardened host access, private remote application access through Tailscale, and least-privilege authorization without introducing public Internet exposure.
+
+## Phase 9A: Domain Improvements and Rejection Tracking
+
+### Goal
+
+Improve the Internship Application Tracker domain model so that rejected applications can contain useful structured rejection information instead of relying only on generic notes.
+
+The tracker should record rejection information only when it is explicitly known. It must never infer or fabricate a rejection reason.
+
+This phase should introduce the smallest useful domain change that supports better application tracking now and provides reliable data for future application analytics.
+
+### Technical Direction
+
+- Add a structured rejection-reason domain value
+- Keep rejection information optional for backwards compatibility
+- Preserve all existing production application records
+- Use a new Alembic migration for database schema changes
+- Keep the existing Pydantic, repository, SQLAlchemy, and FastAPI architecture
+- Update both the in-memory and PostgreSQL repository implementations
+- Keep the frontend TypeScript contract aligned with the backend API
+- Show rejection-specific form controls only when an application is rejected
+- Validate rejection metadata in the backend rather than relying only on frontend behavior
+- Extend automated tests to cover rejection tracking
+- Avoid introducing new dependencies unless clearly justified
+
+### Rejection Reason Model
+
+The initial rejection-reason categories should remain deliberately small and useful.
+
+Expected categories include:
+
+- no reason provided
+- position filled
+- experience or qualifications
+- location
+- language
+- salary or conditions
+- timing
+- other
+
+The exact stored values should be defined during implementation.
+
+A rejection reason should remain nullable.
+
+This distinction is intentional:
+
+- a non-rejected application normally has no rejection reason
+- a rejected application with `no reason provided` explicitly records that the company gave no reason
+- a rejected application with no structured rejection reason may represent legacy data or an application that has not yet been updated
+
+Existing rejected applications must not automatically be assigned a rejection reason during migration.
+
+### Deliverables
+
+- Rejection-reason domain enum/value
+- Optional rejection-reason field in the application API model
+- Backend validation between application status and rejection reason
+- SQLAlchemy model support for rejection reason
+- New backwards-compatible Alembic migration
+- In-memory repository support
+- PostgreSQL repository support
+- API create, list, retrieve, and update support
+- Updated frontend application types
+- Conditional rejection-reason input in the shared application form
+- Rejection-reason display for rejected applications where available
+- Automated model tests for valid and invalid rejection metadata
+- Repository tests for rejection-reason persistence
+- API tests for rejection tracking
+- PostgreSQL integration coverage for the migrated field
+- Updated documentation for the final rejection-tracking behavior
+
+### Non-Goals
+
+- Application analytics API
+- Analytics dashboard or charts
+- Status-history tracking
+- Automatic status-transition timestamps
+- Rejection-date tracking
+- Separate rejection-notes field
+- Automatically interpreting existing application notes
+- AI-based rejection classification
+- German/English localization
+- Authentication or authorization
+- Infrastructure changes
+- Monitoring or logging changes
+- Kubernetes or other orchestration changes
+
+The existing general `notes` field remains available for free-form rejection details when needed.
+
+Status history and rejection dates may be reconsidered later if real product requirements justify the additional domain and database complexity.
+
+### Definition of Done
+
+- [ ] A structured rejection reason can be stored for a rejected application
+- [ ] Rejection reasons use a defined set of supported values
+- [ ] A rejected application may explicitly record that no rejection reason was provided
+- [ ] A rejected application may remain without structured rejection metadata for legacy or incomplete data
+- [ ] A rejection reason cannot remain attached to an application whose status is not rejected
+- [ ] Existing production application rows remain valid after the migration
+- [ ] Existing rejected applications are not assigned fabricated rejection reasons
+- [ ] The database schema change is implemented through a new Alembic migration
+- [ ] The migration upgrades an existing PostgreSQL database without deleting application data
+- [ ] The in-memory repository preserves rejection information
+- [ ] The PostgreSQL repository preserves rejection information
+- [ ] POST application requests support rejection information
+- [ ] PUT application requests support rejection information
+- [ ] GET application responses return rejection information
+- [ ] Existing CRUD behavior remains functional
+- [ ] Frontend TypeScript types match the backend API contract
+- [ ] The application form exposes rejection information only when appropriate
+- [ ] Rejection information is displayed clearly where available
+- [ ] Backend model tests cover rejection validation
+- [ ] Fast API and repository tests cover the new behavior
+- [ ] PostgreSQL integration testing covers rejection persistence
+- [ ] Existing backend fast tests pass
+- [ ] PostgreSQL integration tests pass
+- [ ] Frontend lint passes
+- [ ] Frontend production build passes
+- [ ] Existing container validation remains successful
+- [ ] Deployment to the Raspberry Pi succeeds
+- [ ] Existing production application data remains intact after deployment
+- [ ] Final rejection-tracking behavior is documented
