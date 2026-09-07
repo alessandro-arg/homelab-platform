@@ -8,7 +8,9 @@ from internship_tracker.database import (
     create_session_factory,
 )
 from internship_tracker.database_models import Base
-from internship_tracker.models import ApplicationCreate, ApplicationStatus
+from internship_tracker.models import (
+    ApplicationCreate, ApplicationStatus, RejectionReason,
+)
 from internship_tracker.sqlalchemy_repository import (
     SqlAlchemyApplicationRepository,
 )
@@ -51,6 +53,7 @@ def test_create_application(
     assert application.id == 1
     assert application.company_name == "Example GmbH"
     assert application.status == ApplicationStatus.APPLIED
+    assert application.rejection_reason is None
     assert application.application_date == date(2026, 8, 6)
     assert application.contact_email == "jobs@example.com"
     assert str(application.job_url) == (
@@ -142,3 +145,45 @@ def test_delete_unknown_application_returns_false(
     repository: SqlAlchemyApplicationRepository,
 ) -> None:
     assert repository.delete(999) is False
+
+
+@pytest.mark.parametrize("clear_fields", [{}, {"rejection_reason": None}])
+def test_rejection_reason_persistence(clear_fields):
+    engine = create_database_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session_factory = create_session_factory(engine)
+    payload = {
+        "company_name": "Example GmbH",
+        "status": "rejected",
+        "application_date": date(2026, 8, 6),
+    }
+    try:
+        with session_factory() as session:
+            repository = SqlAlchemyApplicationRepository(session)
+            created = repository.create(ApplicationCreate(
+                **payload, rejection_reason="no_reason_provided",
+            ))
+            assert created.rejection_reason is RejectionReason.NO_REASON_PROVIDED
+
+        with session_factory() as session:
+            repository = SqlAlchemyApplicationRepository(session)
+            assert repository.get_by_id(created.id) == created
+            assert repository.list_all() == [created]
+            updated = repository.update(created.id, ApplicationCreate(
+                **payload, rejection_reason="position_filled",
+            ))
+            assert updated.rejection_reason is RejectionReason.POSITION_FILLED
+
+        with session_factory() as session:
+            repository = SqlAlchemyApplicationRepository(session)
+            assert repository.get_by_id(created.id) == updated
+            cleared = repository.update(created.id, ApplicationCreate(
+                **payload, **clear_fields,
+            ))
+            assert cleared.rejection_reason is None
+
+        with session_factory() as session:
+            repository = SqlAlchemyApplicationRepository(session)
+            assert repository.get_by_id(created.id) == cleared
+    finally:
+        engine.dispose()

@@ -17,6 +17,7 @@ def test_application_table_has_expected_columns():
         "company_name",
         "position_title",
         "status",
+        "rejection_reason",
         "application_date",
         "contact_person",
         "contact_email",
@@ -27,6 +28,9 @@ def test_application_table_has_expected_columns():
     assert table.c.id.primary_key is True
     assert table.c.company_name.nullable is False
     assert table.c.status.nullable is False
+    assert table.c.rejection_reason.nullable is True
+    assert table.c.rejection_reason.type.length == 50
+    assert table.c.rejection_reason.server_default is None
 
     assert table.c.position_title.nullable is True
     assert table.c.application_date.nullable is False
