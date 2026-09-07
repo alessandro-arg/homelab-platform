@@ -40,6 +40,7 @@ def test_create_application(client: TestClient) -> None:
     assert response_data["company_name"] == "Example GmbH"
     assert response_data["position_title"] == "Python Developer"
     assert response_data["status"] == "applied"
+    assert response_data["rejection_reason"] is None
     assert response_data["application_date"] == "2026-08-02"
 
 
@@ -198,3 +199,64 @@ def test_delete_unknown_application_returns_404(
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Application not found"}
+
+
+@pytest.mark.parametrize("clear_fields", [{}, {"rejection_reason": None}])
+def test_rejection_reason_round_trip_and_clear(client: TestClient, clear_fields):
+    payload = {
+        "company_name": "Example GmbH",
+        "status": "rejected",
+        "application_date": "2026-08-02",
+        "rejection_reason": "no_reason_provided",
+    }
+    created = client.post("/applications", json=payload)
+    assert created.status_code == 201
+    assert created.json()["rejection_reason"] == "no_reason_provided"
+    url = f"/applications/{created.json()['id']}"
+    assert client.get(url).json() == created.json()
+    assert client.get("/applications").json() == [created.json()]
+
+    payload["rejection_reason"] = "position_filled"
+    updated = client.put(url, json=payload)
+    assert updated.status_code == 200
+    assert updated.json()["rejection_reason"] == "position_filled"
+    assert client.get(url).json() == updated.json()
+
+    payload.pop("rejection_reason")
+    payload["status"] = "interview"
+    cleared = client.put(url, json={**payload, **clear_fields})
+    assert cleared.status_code == 200
+    assert cleared.json()["rejection_reason"] is None
+    assert client.get(url).json() == cleared.json()
+
+
+@pytest.mark.parametrize("invalid_fields", [
+    {"status": "applied", "rejection_reason": "position_filled"},
+    {"status": "rejected", "rejection_reason": "unknown"},
+])
+def test_invalid_rejection_post_returns_422(client: TestClient, invalid_fields):
+    response = client.post("/applications", json={
+        "company_name": "Example GmbH",
+        "application_date": "2026-08-02",
+        **invalid_fields,
+    })
+    assert response.status_code == 422
+    assert client.get("/applications").json() == []
+
+
+def test_invalid_rejection_put_does_not_mutate_application(client: TestClient):
+    payload = {
+        "company_name": "Example GmbH",
+        "status": "rejected",
+        "application_date": "2026-08-02",
+        "rejection_reason": "position_filled",
+    }
+    created = client.post("/applications", json=payload)
+    assert created.status_code == 201
+    url = f"/applications/{created.json()['id']}"
+
+    response = client.put(url, json={
+        **payload, "company_name": "Must not change", "status": "offer",
+    })
+    assert response.status_code == 422
+    assert client.get(url).json() == created.json()

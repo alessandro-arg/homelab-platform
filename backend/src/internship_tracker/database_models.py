@@ -16,6 +16,17 @@ class ApplicationRecord(Base):
             "status IN ('applied', 'interview', 'rejected', 'offer')",
             name="ck_applications_status",
         ),
+        CheckConstraint(
+            "rejection_reason IS NULL OR rejection_reason IN ("
+            "'no_reason_provided', 'position_filled', "
+            "'experience_or_qualifications', 'location', 'language', "
+            "'salary_or_conditions', 'timing', 'other')",
+            name="ck_applications_rejection_reason",
+        ),
+        CheckConstraint(
+            "rejection_reason IS NULL OR status = 'rejected'",
+            name="ck_applications_rejection_reason_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(
@@ -36,6 +47,11 @@ class ApplicationRecord(Base):
     status: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
+    )
+
+    rejection_reason: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
     )
 
     application_date: Mapped[date] = mapped_column(

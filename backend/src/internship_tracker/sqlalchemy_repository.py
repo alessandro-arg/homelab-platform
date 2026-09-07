@@ -18,6 +18,11 @@ class SqlAlchemyApplicationRepository:
             company_name=application_data.company_name,
             position_title=application_data.position_title,
             status=application_data.status.value,
+            rejection_reason=(
+                application_data.rejection_reason.value
+                if application_data.rejection_reason is not None
+                else None
+            ),
             application_date=application_data.application_date,
             contact_person=application_data.contact_person,
             contact_email=(
@@ -79,6 +84,11 @@ class SqlAlchemyApplicationRepository:
         record.company_name = application_data.company_name
         record.position_title = application_data.position_title
         record.status = application_data.status.value
+        record.rejection_reason = (
+            application_data.rejection_reason.value
+            if application_data.rejection_reason is not None
+            else None
+        )
         record.application_date = application_data.application_date
         record.contact_person = application_data.contact_person
         record.contact_email = (
@@ -127,6 +137,7 @@ class SqlAlchemyApplicationRepository:
             company_name=record.company_name,
             position_title=record.position_title,
             status=record.status,
+            rejection_reason=record.rejection_reason,
             application_date=record.application_date,
             contact_person=record.contact_person,
             contact_email=record.contact_email,
