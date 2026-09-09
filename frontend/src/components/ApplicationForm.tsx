@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 
+import { rejectionReasonLabels } from "../types/application";
 import type {
   ApplicationCreate,
   ApplicationStatus,
+  RejectionReason,
 } from "../types/application";
 
 interface ApplicationFormProps {
@@ -18,6 +20,7 @@ interface FormState {
   company_name: string;
   position_title: string;
   status: ApplicationStatus;
+  rejection_reason: RejectionReason | "";
   application_date: string;
   contact_person: string;
   contact_email: string;
@@ -30,6 +33,10 @@ function buildInitialState(initialValues?: ApplicationCreate): FormState {
     company_name: initialValues?.company_name ?? "",
     position_title: initialValues?.position_title ?? "",
     status: initialValues?.status ?? "applied",
+    rejection_reason:
+      initialValues?.status === "rejected"
+        ? (initialValues.rejection_reason ?? "")
+        : "",
     application_date: initialValues?.application_date ?? "",
     contact_person: initialValues?.contact_person ?? "",
     contact_email: initialValues?.contact_email ?? "",
@@ -64,6 +71,10 @@ function ApplicationForm({
       company_name: form.company_name.trim(),
       position_title: optionalValue(form.position_title),
       status: form.status,
+      rejection_reason:
+        form.status === "rejected" && form.rejection_reason !== ""
+          ? form.rejection_reason
+          : null,
       application_date: form.application_date,
       contact_person: optionalValue(form.contact_person),
       contact_email: optionalValue(form.contact_email),
@@ -125,12 +136,15 @@ function ApplicationForm({
             Status
             <select
               value={form.status}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  status: event.target.value as ApplicationStatus,
-                })
-              }
+              onChange={(event) => {
+                const status = event.target.value as ApplicationStatus;
+                setForm((current) => ({
+                  ...current,
+                  status,
+                  rejection_reason:
+                    status === "rejected" ? current.rejection_reason : "",
+                }));
+              }}
             >
               <option value="applied">Applied</option>
               <option value="interview">Interview</option>
@@ -138,6 +152,32 @@ function ApplicationForm({
               <option value="offer">Offer</option>
             </select>
           </label>
+
+          {form.status === "rejected" && (
+            <label>
+              Rejection reason (optional)
+              <select
+                value={form.rejection_reason}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    rejection_reason: event.target.value as
+                      | RejectionReason
+                      | "",
+                  })
+                }
+              >
+                <option value="">Not recorded</option>
+                {Object.entries(rejectionReasonLabels).map(
+                  ([reason, label]) => (
+                    <option key={reason} value={reason}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+          )}
 
           <label>
             Application date
