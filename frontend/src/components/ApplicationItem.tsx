@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { rejectionReasonLabels } from "../types/application";
 import type { Application } from "../types/application";
 
 interface ApplicationItemProps {
@@ -27,6 +28,8 @@ function ApplicationItem({
 }: ApplicationItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const rejectionReason =
+    application.status === "rejected" ? application.rejection_reason : null;
 
   async function handleDelete() {
     const confirmed = window.confirm(
@@ -97,11 +100,16 @@ function ApplicationItem({
         </p>
       )}
 
-      {(application.contact_person ||
+      {(rejectionReason ||
+        application.contact_person ||
         application.contact_email ||
         application.job_url ||
         application.notes) && (
         <div className="application-details">
+          {rejectionReason && (
+            <span>Rejection reason: {rejectionReasonLabels[rejectionReason]}</span>
+          )}
+
           {application.contact_person && (
             <span>Contact: {application.contact_person}</span>
           )}
