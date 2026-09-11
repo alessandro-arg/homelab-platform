@@ -6,6 +6,7 @@ import type { Application } from "./types/application";
 import CreateApplicationForm from "./components/CreateApplicationForm";
 import ApplicationItem from "./components/ApplicationItem";
 import EditApplicationForm from "./components/EditApplicationForm";
+import ApplicationAnalyticsDashboard from "./components/ApplicationAnalyticsDashboard";
 
 import ApplicationOverview, {
   type ApplicationFilter,
@@ -17,6 +18,7 @@ function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsRefreshVersion, setAnalyticsRefreshVersion] = useState(0);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingApplication, setEditingApplication] =
@@ -91,6 +93,7 @@ function App() {
             setApplications((current) => [application, ...current]);
             setError(null);
             setIsCreateOpen(false);
+            setAnalyticsRefreshVersion((current) => current + 1);
           }}
           onCancel={() => setIsCreateOpen(false)}
         />
@@ -109,10 +112,13 @@ function App() {
             );
 
             setEditingApplication(null);
+            setAnalyticsRefreshVersion((current) => current + 1);
           }}
           onCancel={() => setEditingApplication(null)}
         />
       )}
+
+      <ApplicationAnalyticsDashboard refreshVersion={analyticsRefreshVersion} />
 
       {!isLoading && !error && applications.length > 0 && (
         <ApplicationOverview
@@ -169,6 +175,7 @@ function App() {
                 }}
                 onDelete={async (application) => {
                   await deleteApplication(application.id);
+                  setAnalyticsRefreshVersion((current) => current + 1);
 
                   setApplications((current) =>
                     current.filter((item) => item.id !== application.id),
