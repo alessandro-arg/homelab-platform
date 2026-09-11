@@ -54,3 +54,16 @@ class ApplicationCreate(BaseModel):
 
 class Application(ApplicationCreate):
     id: int
+
+
+class MonthlyApplicationCount(BaseModel):
+    month: str
+    count: int
+
+
+class ApplicationAnalytics(BaseModel):
+    total_applications: int
+    current_status_counts: dict[ApplicationStatus, int]
+    rejection_reason_counts: dict[RejectionReason, int]
+    rejected_without_recorded_reason: int
+    applications_by_month: list[MonthlyApplicationCount]

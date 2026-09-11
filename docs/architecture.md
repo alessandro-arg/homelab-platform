@@ -115,6 +115,7 @@ The API currently exposes:
 - `GET /applications/{application_id}`
 - `PUT /applications/{application_id}`
 - `DELETE /applications/{application_id}`
+- `GET /analytics/applications`
 - `GET /metrics`
 
 The backend API paths remain unchanged internally. In normal production browser use, Nginx exposes these application endpoints through the frontend `/api/*` path and removes the `/api` prefix before forwarding the request to FastAPI.
@@ -139,6 +140,52 @@ Metrics include request counts, HTTP status classes, request duration histograms
 The `/health` and `/metrics` handlers are excluded from HTTP request statistics so Docker health checks and Prometheus scraping do not pollute application traffic metrics.
 
 The HTTP layer does not directly contain SQL or database-specific logic.
+
+### Application Analytics
+
+`GET /analytics/applications` returns a read-only summary of the current stored dataset. The browser-facing path is `/api/analytics/applications` through the existing proxy. The endpoint accepts no parameters and returns HTTP `200`, including when there are no applications.
+
+The response uses the Pydantic `ApplicationAnalytics` model, with
+`MonthlyApplicationCount` entries for the monthly series:
+
+```json
+{
+  "total_applications": 7,
+  "current_status_counts": {
+    "applied": 2,
+    "interview": 1,
+    "rejected": 3,
+    "offer": 1
+  },
+  "rejection_reason_counts": {
+    "no_reason_provided": 1,
+    "position_filled": 1,
+    "experience_or_qualifications": 0,
+    "location": 0,
+    "language": 0,
+    "salary_or_conditions": 0,
+    "timing": 0,
+    "other": 0
+  },
+  "rejected_without_recorded_reason": 1,
+  "applications_by_month": [
+    { "month": "2026-07", "count": 3 },
+    { "month": "2026-08", "count": 4 }
+  ]
+}
+```
+
+- `total_applications` counts all currently stored applications.
+- `current_status_counts` includes every application status, including zeros. Each application contributes only to its current status.
+- `rejection_reason_counts` includes every explicit rejection reason, including zeros, for currently rejected applications.
+- `rejected_without_recorded_reason` counts only currently rejected applications whose reason is `None` / SQL `NULL`. Explicit `no_reason_provided` remains a separate recorded reason. The sum of explicit reason counts and this count equals the current rejected count.
+- `applications_by_month` groups all applications by the year and month of `application_date`, formatted as `YYYY-MM`. Only months containing records are included, sorted chronologically ascending. Future dates are included as stored. Monthly counts and status counts each sum to `total_applications`.
+
+For an empty dataset, all counts are zero, all status and reason keys remain present, and `applications_by_month` is empty.
+
+The tracker does not store historical status events. These counts do not measure past interviews, responses, conversions, or elapsed response times. Editing dates, statuses, or reasons, and deleting applications, can change subsequent summaries, including counts for earlier months.
+
+The route calls the existing repository's `list_all()` once and passes its result to the pure `calculate_application_analytics()` function in `analytics.py`. Aggregation runs in Python over validated applications, keeping the same semantics for both repositories. This is appropriate for the small personal tracker and requires no SQL aggregation, schema changes, or stored analytics data.
 
 ### API Models
 
