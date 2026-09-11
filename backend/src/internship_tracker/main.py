@@ -3,8 +3,11 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from internship_tracker.analytics import calculate_application_analytics
 from internship_tracker.dependencies import get_repository
-from internship_tracker.models import Application, ApplicationCreate
+from internship_tracker.models import (
+    Application, ApplicationAnalytics, ApplicationCreate,
+)
 from internship_tracker.repository import ApplicationRepository
 
 
@@ -49,6 +52,19 @@ def list_applications(
     ],
 ) -> list[Application]:
     return application_repository.list_all()
+
+
+@app.get(
+    "/analytics/applications",
+    response_model=ApplicationAnalytics,
+)
+def get_application_analytics(
+    application_repository: Annotated[
+        ApplicationRepository,
+        Depends(get_repository),
+    ],
+) -> ApplicationAnalytics:
+    return calculate_application_analytics(application_repository.list_all())
 
 
 @app.get(
