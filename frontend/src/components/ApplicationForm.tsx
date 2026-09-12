@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 
-import { rejectionReasonLabels } from "../types/application";
+import { rejectionReasonLabels, statusLabels } from "../types/application";
 import type {
   ApplicationCreate,
   ApplicationStatus,
@@ -91,7 +91,7 @@ function ApplicationForm({
       setSubmitError(
         error instanceof Error
           ? error.message
-          : "An unexpected error occurred while saving the application.",
+          : "Ein unerwarteter Fehler ist aufgetreten.",
       );
     } finally {
       setIsSubmitting(false);
@@ -110,7 +110,7 @@ function ApplicationForm({
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
           <label>
-            Company
+            Unternehmen
             <input
               type="text"
               value={form.company_name}
@@ -122,7 +122,7 @@ function ApplicationForm({
           </label>
 
           <label>
-            Position
+            Stelle
             <input
               type="text"
               value={form.position_title}
@@ -146,16 +146,16 @@ function ApplicationForm({
                 }));
               }}
             >
-              <option value="applied">Applied</option>
-              <option value="interview">Interview</option>
-              <option value="rejected">Rejected</option>
-              <option value="offer">Offer</option>
+              <option value="applied">{statusLabels.applied}</option>
+              <option value="interview">{statusLabels.interview}</option>
+              <option value="rejected">{statusLabels.rejected}</option>
+              <option value="offer">{statusLabels.offer}</option>
             </select>
           </label>
 
           {form.status === "rejected" && (
             <label>
-              Rejection reason (optional)
+              Absagegrund (optional)
               <select
                 value={form.rejection_reason}
                 onChange={(event) =>
@@ -167,7 +167,7 @@ function ApplicationForm({
                   })
                 }
               >
-                <option value="">Not recorded</option>
+                <option value="">Nicht erfasst</option>
                 {Object.entries(rejectionReasonLabels).map(
                   ([reason, label]) => (
                     <option key={reason} value={reason}>
@@ -180,7 +180,7 @@ function ApplicationForm({
           )}
 
           <label>
-            Application date
+            Bewerbungsdatum
             <input
               type="date"
               value={form.application_date}
@@ -192,7 +192,7 @@ function ApplicationForm({
           </label>
 
           <label>
-            Contact person
+            Kontaktperson
             <input
               type="text"
               value={form.contact_person}
@@ -203,7 +203,7 @@ function ApplicationForm({
           </label>
 
           <label>
-            Contact email
+            E-Mail-Adresse der Kontaktperson
             <input
               type="email"
               value={form.contact_email}
@@ -214,7 +214,7 @@ function ApplicationForm({
           </label>
 
           <label className="full-width">
-            Job URL
+            Link zur Stellenanzeige
             <input
               type="url"
               value={form.job_url}
@@ -225,7 +225,7 @@ function ApplicationForm({
           </label>
 
           <label className="full-width">
-            Notes
+            Notizen
             <textarea
               value={form.notes}
               onChange={(event) =>
@@ -239,13 +239,13 @@ function ApplicationForm({
 
         {submitError && (
           <p role="alert" className="error-message">
-            {submitError}
+            Bewerbung konnte nicht gespeichert werden. {submitError}
           </p>
         )}
 
         <div className="form-actions">
           <button type="button" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            Abbrechen
           </button>
 
           <button
@@ -253,7 +253,7 @@ function ApplicationForm({
             className="button-primary"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Saving..." : submitLabel}
+            {isSubmitting ? "Wird gespeichert…" : submitLabel}
           </button>
         </div>
       </form>

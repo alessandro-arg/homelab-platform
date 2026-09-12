@@ -47,7 +47,7 @@ function App() {
         setError(
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred while loading applications.",
+            : "Ein unerwarteter Fehler ist aufgetreten.",
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -67,10 +67,10 @@ function App() {
     <main className="app-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">Homelab Platform</p>
-          <h1>Internship Tracker</h1>
+          <p className="eyebrow">Homelab-Plattform</p>
+          <h1>Bewerbungsübersicht</h1>
           <p className="subtitle">
-            Manage internship and job applications from one place.
+            Praktikums- und Stellenbewerbungen zentral verwalten.
           </p>
         </div>
 
@@ -83,7 +83,7 @@ function App() {
             setIsCreateOpen(true);
           }}
         >
-          Add application
+          Bewerbung hinzufügen
         </button>
       </header>
 
@@ -129,26 +129,26 @@ function App() {
       )}
 
       <section className="applications" aria-labelledby="applications-heading">
-        <h2 id="applications-heading">Applications</h2>
+        <h2 id="applications-heading">Bewerbungen</h2>
 
         {isLoading && (
           <div className="loading-state" role="status">
             <span className="loading-spinner" aria-hidden="true" />
-            <span>Loading applications...</span>
+            <span>Bewerbungen werden geladen…</span>
           </div>
         )}
 
         {!isLoading && error && (
           <p role="alert" className="error-message">
-            {error}
+            Bewerbungen konnten nicht geladen werden. {error}
           </p>
         )}
 
         {!isLoading && !error && applications.length === 0 && (
           <div className="empty-state">
-            <h3>No applications yet</h3>
+            <h3>Noch keine Bewerbungen</h3>
             <p>
-              Your applications will appear here after you add your first one.
+              Nach dem Hinzufügen erscheint hier die erste Bewerbung.
             </p>
           </div>
         )}
@@ -158,8 +158,8 @@ function App() {
           applications.length > 0 &&
           filteredApplications.length === 0 && (
             <div className="empty-state">
-              <h3>No matching applications</h3>
-              <p>There are no applications with this status yet.</p>
+              <h3>Keine passenden Bewerbungen</h3>
+              <p>Es gibt noch keine Bewerbungen mit diesem Status.</p>
             </div>
           )}
 

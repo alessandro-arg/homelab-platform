@@ -1,5 +1,12 @@
 export type ApplicationStatus = "applied" | "interview" | "rejected" | "offer";
 
+export const statusLabels: Record<ApplicationStatus, string> = {
+  applied: "Beworben",
+  interview: "Gespräch",
+  rejected: "Absage",
+  offer: "Angebot",
+};
+
 export type RejectionReason =
   | "no_reason_provided"
   | "position_filled"
@@ -11,14 +18,14 @@ export type RejectionReason =
   | "other";
 
 export const rejectionReasonLabels: Record<RejectionReason, string> = {
-  no_reason_provided: "No reason provided",
-  position_filled: "Position filled",
-  experience_or_qualifications: "Experience or qualifications",
-  location: "Location",
-  language: "Language",
-  salary_or_conditions: "Salary or conditions",
-  timing: "Timing",
-  other: "Other",
+  no_reason_provided: "Kein Grund genannt",
+  position_filled: "Stelle bereits besetzt",
+  experience_or_qualifications: "Erfahrung oder Qualifikationen",
+  location: "Standort",
+  language: "Sprache",
+  salary_or_conditions: "Gehalt oder Bedingungen",
+  timing: "Zeitpunkt",
+  other: "Sonstiges",
 };
 
 export interface ApplicationCreate {

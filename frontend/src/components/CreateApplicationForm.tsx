@@ -18,9 +18,9 @@ function CreateApplicationForm({
 
   return (
     <ApplicationForm
-      title="Add application"
-      description="Record a new internship or job application."
-      submitLabel="Save application"
+      title="Bewerbung hinzufügen"
+      description="Eine neue Praktikums- oder Stellenbewerbung erfassen."
+      submitLabel="Bewerbung speichern"
       onSubmit={handleSubmit}
       onCancel={onCancel}
     />

@@ -7,7 +7,7 @@ export async function getApplicationAnalytics(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to load analytics: ${response.status} ${response.statusText}`,
+      `Fehler beim Laden der Statistik: ${response.status} ${response.statusText}`,
     );
   }
 

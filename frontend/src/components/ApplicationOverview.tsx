@@ -1,3 +1,4 @@
+import { statusLabels } from "../types/application";
 import type { Application, ApplicationStatus } from "../types/application";
 
 export type ApplicationFilter = "all" | ApplicationStatus;
@@ -12,11 +13,11 @@ const filters: {
   value: ApplicationFilter;
   label: string;
 }[] = [
-  { value: "all", label: "All" },
-  { value: "applied", label: "Applied" },
-  { value: "interview", label: "Interview" },
-  { value: "rejected", label: "Rejected" },
-  { value: "offer", label: "Offer" },
+  { value: "all", label: "Alle" },
+  { value: "applied", label: statusLabels.applied },
+  { value: "interview", label: statusLabels.interview },
+  { value: "rejected", label: statusLabels.rejected },
+  { value: "offer", label: statusLabels.offer },
 ];
 
 function ApplicationOverview({
@@ -34,7 +35,7 @@ function ApplicationOverview({
   }
 
   return (
-    <section className="application-overview" aria-label="Application overview">
+    <section className="application-overview" aria-label="Bewerbungsübersicht">
       {filters.map((filter) => (
         <button
           key={filter.value}
