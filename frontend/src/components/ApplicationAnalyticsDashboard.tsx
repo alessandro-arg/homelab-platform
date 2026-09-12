@@ -1,17 +1,10 @@
 import { useEffect, useState } from "react";
 import { getApplicationAnalytics } from "../api/analytics";
 import type { ApplicationAnalytics } from "../types/analytics";
-import { rejectionReasonLabels } from "../types/application";
+import { rejectionReasonLabels, statusLabels } from "../types/application";
 import type { ApplicationStatus, RejectionReason } from "../types/application";
 
-const statusLabels: Record<ApplicationStatus, string> = {
-  applied: "Applied",
-  interview: "Interview",
-  rejected: "Rejected",
-  offer: "Offer",
-};
-
-const monthFormatter = new Intl.DateTimeFormat("en", {
+const monthFormatter = new Intl.DateTimeFormat("de-DE", {
   month: "short",
   year: "numeric",
   timeZone: "UTC",
@@ -73,7 +66,7 @@ function ApplicationAnalyticsDashboard({
           setError(
             error instanceof Error
               ? error.message
-              : "An unexpected error occurred while loading analytics.",
+              : "Ein unerwarteter Fehler ist aufgetreten.",
           );
         }
       } finally {
@@ -112,15 +105,17 @@ function ApplicationAnalyticsDashboard({
       className="analytics-dashboard"
       aria-labelledby="analytics-heading"
     >
-      <h2 id="analytics-heading">Application analytics</h2>
+      <h2 id="analytics-heading">Bewerbungsstatistik</h2>
       <p className="analytics-description">
-        All applications · Current stored records
+        Alle Bewerbungen · Aktuell gespeicherte Einträge
       </p>
 
       <div role="status">
         {(isInitialLoading || isRefreshing) && (
           <p className="loading-state">
-            {isInitialLoading ? "Loading analytics…" : "Updating analytics…"}
+            {isInitialLoading
+              ? "Statistik wird geladen…"
+              : "Statistik wird aktualisiert…"}
           </p>
         )}
       </div>
@@ -129,15 +124,15 @@ function ApplicationAnalyticsDashboard({
         <div className="analytics-error">
           <p className="error-message" role="alert">
             {analytics
-              ? "Analytics could not be refreshed; displayed figures may be out of date."
-              : "Analytics could not be loaded."}{" "}
+              ? "Statistik konnte nicht aktualisiert werden. Die angezeigten Zahlen sind möglicherweise veraltet."
+              : "Statistik konnte nicht geladen werden."}{" "}
             {error}
           </p>
           <button
             type="button"
             onClick={() => setRetryVersion((current) => current + 1)}
           >
-            Retry
+            Erneut versuchen
           </button>
         </div>
       )}
@@ -145,14 +140,17 @@ function ApplicationAnalyticsDashboard({
       {analytics && (
         <>
           <dl className="analytics-total">
-            <dt>Total applications</dt>
+            <dt>Bewerbungen insgesamt</dt>
             <dd>{analytics.total_applications}</dd>
           </dl>
 
           {analytics.total_applications === 0 ? (
             <div className="empty-state">
-              <h3>No applications to summarize yet</h3>
-              <p>Add your first application to see analytics here.</p>
+              <h3>Noch keine Bewerbungen zur Auswertung</h3>
+              <p>
+                Nach dem Hinzufügen der ersten Bewerbung erscheint hier die
+                Statistik.
+              </p>
             </div>
           ) : (
             <div className="analytics-grid">
@@ -160,11 +158,9 @@ function ApplicationAnalyticsDashboard({
                 className="analytics-panel"
                 aria-labelledby="analytics-status-heading"
               >
-                <h3 id="analytics-status-heading">
-                  Current status distribution
-                </h3>
+                <h3 id="analytics-status-heading">Aktueller Status</h3>
                 <p className="analytics-description">
-                  Each application counts toward its current status only.
+                  Jede Bewerbung wird nur ihrem aktuellen Status zugeordnet.
                 </p>
                 <ul className="analytics-rows">
                   {(Object.keys(statusLabels) as ApplicationStatus[]).map(
@@ -184,12 +180,10 @@ function ApplicationAnalyticsDashboard({
                 className="analytics-panel"
                 aria-labelledby="analytics-month-heading"
               >
-                <h3 id="analytics-month-heading">
-                  Applications submitted by month
-                </h3>
+                <h3 id="analytics-month-heading">Bewerbungen nach Monat</h3>
                 <p className="analytics-description">
-                  Based on application dates. Months without applications are
-                  omitted.
+                  Basiert auf Bewerbungsdatum. Monate ohne Bewerbungen werden
+                  nicht angezeigt.
                 </p>
                 <ul className="analytics-rows">
                   {analytics.applications_by_month.map(({ month, count }) => (
@@ -208,12 +202,10 @@ function ApplicationAnalyticsDashboard({
                 aria-labelledby="analytics-reason-heading"
               >
                 <h3 id="analytics-reason-heading">
-                  Rejection reason distribution
+                  Verteilung der Absagegründe
                 </h3>
                 {analytics.current_status_counts.rejected === 0 ? (
-                  <p className="analytics-description">
-                    No rejected applications yet.
-                  </p>
+                  <p className="analytics-description">Noch keine Absagen.</p>
                 ) : (
                   <>
                     {reasons.length > 0 ? (
@@ -229,19 +221,19 @@ function ApplicationAnalyticsDashboard({
                       </ul>
                     ) : (
                       <p className="analytics-description">
-                        No rejection reasons recorded for the rejected
-                        applications.
+                        Für die abgelehnten Bewerbungen wurden keine
+                        Absagegründe erfasst.
                       </p>
                     )}
                     {analytics.rejected_without_recorded_reason > 0 && (
                       <>
                         <dl className="analytics-missing-reason">
-                          <dt>Rejected without recorded reason</dt>
+                          <dt>Absagen ohne erfassten Grund</dt>
                           <dd>{analytics.rejected_without_recorded_reason}</dd>
                         </dl>
                         <p className="analytics-description">
-                          Missing reasons are counted separately from the recorded
-                          “No reason provided” category.
+                          Nicht erfasste Gründe werden getrennt von der
+                          Kategorie „Kein Grund genannt“ gezählt.
                         </p>
                       </>
                     )}

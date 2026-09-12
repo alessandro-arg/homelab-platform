@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { rejectionReasonLabels } from "../types/application";
+import { rejectionReasonLabels, statusLabels } from "../types/application";
 import type { Application } from "../types/application";
 
 interface ApplicationItemProps {
@@ -8,14 +8,10 @@ interface ApplicationItemProps {
   onDelete: (application: Application) => Promise<void>;
 }
 
-function formatStatus(status: Application["status"]) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`));
@@ -33,7 +29,7 @@ function ApplicationItem({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Delete the application for ${application.company_name}?`,
+      `Bewerbung bei ${application.company_name} löschen?`,
     );
 
     if (!confirmed) {
@@ -49,7 +45,7 @@ function ApplicationItem({
       setDeleteError(
         error instanceof Error
           ? error.message
-          : "An unexpected error occurred while deleting the application.",
+          : "Ein unerwarteter Fehler ist aufgetreten.",
       );
     } finally {
       setIsDeleting(false);
@@ -61,11 +57,11 @@ function ApplicationItem({
       <div className="application-main">
         <div className="application-title">
           <strong>{application.company_name}</strong>
-          <span>{application.position_title ?? "No position title"}</span>
+          <span>{application.position_title ?? "Keine Stellenbezeichnung"}</span>
         </div>
 
         <span className={`status status-${application.status}`}>
-          {formatStatus(application.status)}
+          {statusLabels[application.status]}
         </span>
       </div>
 
@@ -80,7 +76,7 @@ function ApplicationItem({
             onClick={() => onEdit(application)}
             disabled={isDeleting}
           >
-            Edit
+            Bearbeiten
           </button>
 
           <button
@@ -89,14 +85,14 @@ function ApplicationItem({
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? "Wird gelöscht…" : "Löschen"}
           </button>
         </div>
       </div>
 
       {deleteError && (
         <p role="alert" className="error-message">
-          {deleteError}
+          Bewerbung konnte nicht gelöscht werden. {deleteError}
         </p>
       )}
 
@@ -107,11 +103,11 @@ function ApplicationItem({
         application.notes) && (
         <div className="application-details">
           {rejectionReason && (
-            <span>Rejection reason: {rejectionReasonLabels[rejectionReason]}</span>
+            <span>Absagegrund: {rejectionReasonLabels[rejectionReason]}</span>
           )}
 
           {application.contact_person && (
-            <span>Contact: {application.contact_person}</span>
+            <span>Kontakt: {application.contact_person}</span>
           )}
 
           {application.contact_email && (
@@ -122,7 +118,7 @@ function ApplicationItem({
 
           {application.job_url && (
             <a href={application.job_url} target="_blank" rel="noreferrer">
-              Job posting
+              Stellenanzeige
             </a>
           )}
 

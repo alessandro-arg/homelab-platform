@@ -11,7 +11,7 @@ export async function getApplications(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to load applications: ${response.status} ${response.statusText}`,
+      `Fehler beim Laden der Bewerbungen: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -31,7 +31,7 @@ export async function createApplication(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to create application: ${response.status} ${response.statusText}`,
+      `Fehler beim Anlegen der Bewerbung: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -52,7 +52,7 @@ export async function updateApplication(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to update application: ${response.status} ${response.statusText}`,
+      `Fehler beim Aktualisieren der Bewerbung: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -66,7 +66,7 @@ export async function deleteApplication(id: number): Promise<void> {
 
   if (!response.ok) {
     throw new Error(
-      `Failed to delete application: ${response.status} ${response.statusText}`,
+      `Fehler beim Löschen der Bewerbung: ${response.status} ${response.statusText}`,
     );
   }
 }

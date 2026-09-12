@@ -22,9 +22,9 @@ function EditApplicationForm({
   return (
     <ApplicationForm
       key={application.id}
-      title="Edit application"
-      description={`Update the application for ${application.company_name}.`}
-      submitLabel="Save changes"
+      title="Bewerbung bearbeiten"
+      description={`Bewerbung bei ${application.company_name} bearbeiten.`}
+      submitLabel="Änderungen speichern"
       initialValues={application}
       onSubmit={handleSubmit}
       onCancel={onCancel}
