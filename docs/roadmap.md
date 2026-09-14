@@ -710,7 +710,7 @@ Phase 8 has established:
 
 Phase 8 is complete. The Raspberry Pi now has documented and verified network boundaries, segmented Docker networking, hardened host access, private remote application access through Tailscale, and least-privilege authorization without introducing public Internet exposure.
 
-## Phase 9A: Domain Improvements and Rejection Tracking
+## Phase 9A: Domain Improvements and Rejection Tracking - **Completed**
 
 ### Goal
 
@@ -736,28 +736,24 @@ This phase should introduce the smallest useful domain change that supports bett
 
 ### Rejection Reason Model
 
-The initial rejection-reason categories should remain deliberately small and useful.
+The implemented rejection-reason values are deliberately small in number:
 
-Expected categories include:
+- `no_reason_provided`
+- `position_filled`
+- `experience_or_qualifications`
+- `location`
+- `language`
+- `salary_or_conditions`
+- `timing`
+- `other`
 
-- no reason provided
-- position filled
-- experience or qualifications
-- location
-- language
-- salary or conditions
-- timing
-- other
-
-The exact stored values should be defined during implementation.
-
-A rejection reason should remain nullable.
+A rejection reason is optional and nullable. A non-null rejection reason is allowed only when status is `rejected`.
 
 This distinction is intentional:
 
-- a non-rejected application normally has no rejection reason
-- a rejected application with `no reason provided` explicitly records that the company gave no reason
-- a rejected application with no structured rejection reason may represent legacy data or an application that has not yet been updated
+- a non-rejected application must have no structured rejection reason
+- a rejected application with `no_reason_provided` explicitly records that the company gave no reason
+- a rejected application with a null or absent structured rejection reason has no reason currently recorded; it may represent legacy data or an application that has not yet been updated
 
 Existing rejected applications must not automatically be assigned a rejection reason during migration.
 
@@ -767,6 +763,7 @@ Existing rejected applications must not automatically be assigned a rejection re
 - Optional rejection-reason field in the application API model
 - Backend validation between application status and rejection reason
 - SQLAlchemy model support for rejection reason
+- PostgreSQL constraints for allowed rejection-reason values and status/reason consistency
 - New backwards-compatible Alembic migration
 - In-memory repository support
 - PostgreSQL repository support
@@ -802,32 +799,191 @@ Status history and rejection dates may be reconsidered later if real product req
 
 ### Definition of Done
 
-- [ ] A structured rejection reason can be stored for a rejected application
-- [ ] Rejection reasons use a defined set of supported values
-- [ ] A rejected application may explicitly record that no rejection reason was provided
-- [ ] A rejected application may remain without structured rejection metadata for legacy or incomplete data
-- [ ] A rejection reason cannot remain attached to an application whose status is not rejected
-- [ ] Existing production application rows remain valid after the migration
-- [ ] Existing rejected applications are not assigned fabricated rejection reasons
-- [ ] The database schema change is implemented through a new Alembic migration
-- [ ] The migration upgrades an existing PostgreSQL database without deleting application data
-- [ ] The in-memory repository preserves rejection information
-- [ ] The PostgreSQL repository preserves rejection information
-- [ ] POST application requests support rejection information
-- [ ] PUT application requests support rejection information
-- [ ] GET application responses return rejection information
-- [ ] Existing CRUD behavior remains functional
-- [ ] Frontend TypeScript types match the backend API contract
-- [ ] The application form exposes rejection information only when appropriate
-- [ ] Rejection information is displayed clearly where available
-- [ ] Backend model tests cover rejection validation
-- [ ] Fast API and repository tests cover the new behavior
-- [ ] PostgreSQL integration testing covers rejection persistence
-- [ ] Existing backend fast tests pass
-- [ ] PostgreSQL integration tests pass
-- [ ] Frontend lint passes
-- [ ] Frontend production build passes
-- [ ] Existing container validation remains successful
-- [ ] Deployment to the Raspberry Pi succeeds
-- [ ] Existing production application data remains intact after deployment
-- [ ] Final rejection-tracking behavior is documented
+- [x] A structured rejection reason can be stored for a rejected application
+- [x] Rejection reasons use a defined set of supported values
+- [x] A rejected application may explicitly record that no rejection reason was provided
+- [x] A rejected application may remain without structured rejection metadata for legacy or incomplete data
+- [x] A rejection reason cannot remain attached to an application whose status is not rejected
+- [x] Existing production application rows remain valid after the migration
+- [x] Existing rejected applications are not assigned fabricated rejection reasons
+- [x] The database schema change is implemented through a new Alembic migration
+- [x] The migration upgrades an existing PostgreSQL database without deleting application data
+- [x] The in-memory repository preserves rejection information
+- [x] The PostgreSQL repository preserves rejection information
+- [x] POST application requests support rejection information
+- [x] PUT application requests support rejection information
+- [x] GET application responses return rejection information
+- [x] Existing CRUD behavior remains functional
+- [x] Frontend TypeScript types match the backend API contract
+- [x] The application form exposes rejection information only when appropriate
+- [x] Rejection information is displayed clearly where available
+- [x] Backend model tests cover rejection validation
+- [x] Fast API and repository tests cover the new behavior
+- [x] PostgreSQL integration testing covers rejection persistence
+- [x] Existing backend fast tests pass
+- [x] PostgreSQL integration tests pass
+- [x] Frontend lint passes
+- [x] Frontend production build passes
+- [x] Existing container validation remains successful
+- [x] Deployment to the Raspberry Pi succeeds
+- [x] Existing production application data remains intact after deployment
+- [x] Final rejection-tracking behavior is documented
+
+### Phase 9A Result
+
+Phase 9A added validated rejection tracking across the backend models, repositories, API, and frontend create/edit/display workflows. An additive Alembic migration introduced a nullable column and PostgreSQL constraints while preserving existing production data. Existing records received no inferred or backfilled rejection reasons.
+
+## Phase 9B: Application Analytics API - **Completed**
+
+### Goal
+
+Provide a read-only summary of currently stored applications without inferring historical status transitions or conversion-funnel metrics.
+
+### Completed Deliverables
+
+- `GET /analytics/applications`
+- `total_applications` and `current_status_counts`
+- `rejection_reason_counts` for currently rejected applications
+- `rejected_without_recorded_reason`, keeping null reasons separate from explicit `no_reason_provided`
+- `applications_by_month`, grouped by the year and month of `application_date`
+- Current-record semantics: edits and deletions can change subsequent summaries, including counts for earlier months
+
+The detailed response contract and aggregation behavior are documented in [Application Analytics](architecture.md#application-analytics).
+
+### Definition of Done
+
+- [x] The endpoint summarizes the current stored dataset, including an empty dataset
+- [x] Current status counts, rejection counts, and monthly application counts are returned
+- [x] Missing rejection reasons remain distinct from explicit `no_reason_provided`
+- [x] Analytics behavior is covered by automated tests
+- [x] No status history or funnel metrics are inferred
+
+### Phase 9B Result
+
+The application exposes analytics through the existing repository abstraction without adding stored analytics data or changing the database schema.
+
+## Phase 9C: Analytics Dashboard - **Completed**
+
+### Goal
+
+Make application analytics readable in the frontend while retaining the API's current-record semantics.
+
+### Completed Deliverables
+
+- Total application summary and current status distribution
+- Rejection reason distribution and separate visibility of rejected applications without a recorded reason
+- Applications submitted by month, based on `application_date`
+- CSS-only charts with readable labels/counts and accessible text; decorative bars are hidden from assistive technology
+- Independent analytics request state with loading, empty, error, and retry behavior
+- Refresh after successful create, update, and delete operations
+- Dashboard covering all stored applications independently of the application-list status filter
+- No chart dependency
+
+### Definition of Done
+
+- [x] Totals, distributions, missing rejection reasons, and monthly counts are displayed
+- [x] Values remain readable without relying on visual bar lengths
+- [x] Analytics loading and errors are handled independently of the application list, with retry support
+- [x] Successful CRUD mutations refresh analytics
+- [x] Application-list filtering does not change the dashboard's dataset
+- [x] Charts use CSS without an added chart library
+
+### Phase 9C Result
+
+The frontend provides an accessible summary of all currently stored applications, including feedback when a refresh fails and displayed figures may be stale.
+
+## Phase 9D: German Frontend Localization - **Completed**
+
+### Goal
+
+Provide German-only frontend presentation while keeping backend, domain, and API values language-neutral.
+
+### Completed Deliverables
+
+- German visible frontend UI and application-provided messages
+- German status and rejection-reason display labels
+- German date and month formatting
+- German document language, title, and description metadata
+- Unchanged backend/domain/API values, with translation confined to presentation
+- No localization dependency, language selector, language-preference persistence, or language detection
+
+### Definition of Done
+
+- [x] Frontend text and display labels are German
+- [x] Dates and months use German formatting
+- [x] Document language and metadata match the German interface
+- [x] Stored values and API contracts remain unchanged
+- [x] Localization requires no added dependency or language-selection mechanism
+
+### Phase 9D Result
+
+The tracker presents a German interface while preserving existing domain behavior and API compatibility. Phases 9A–9D are complete.
+
+## Phase 10: AI Job Description Analyzer - **Deferred / Optional**
+
+### Goal
+
+Retain AI-assisted job-description analysis as a possible future feature.
+
+### Reason for Deferral
+
+The tracker is currently used mainly for initiative applications, which often have no job description to analyze. Building the feature now would add complexity without enough day-to-day value.
+
+### Revisit Condition
+
+Reconsider this feature when analyzing real job descriptions becomes a recurring need. Phase 11 is the next planned implementation.
+
+## Phase 11: Mobile-First Application Tracker UX - **Next**
+
+### Goal
+
+Make the tracker comfortable for frequent iPhone use, including use from the home screen, while preserving desktop usability, German UI, accessibility, existing domain behavior, and analytics semantics.
+
+### Planned Deliverables
+
+- Mobile-first layout with clearer visual hierarchy and touch-friendly controls
+- Dark-only UI with no light mode or theme toggle
+- Easier-to-scan application cards, with expandable/accordion cards as the preferred direction
+- Collapsed cards showing company, optional position, current status, and application date
+- Expanded cards exposing complete details and actions
+- Application search, initially covering company and position
+- Review of search/filter/sort architecture so the controls compose predictably, with status filtering retained and improved where useful
+- Sorting with an explicit default; proposed initial choices are newest first, oldest first, company A–Z, and company Z–A
+- Useful no-results feedback and reset behavior
+- Improved mobile create/edit UX, including form placement, field grouping, validation feedback, and save/cancel interaction
+- Review of the form interaction without requiring a dialog/modal in advance
+- Usable forms and actions with the iPhone keyboard open
+- Custom application icon, favicon, and `apple-touch-icon`
+- Add/update web-app manifest metadata where needed and provide appropriate home-screen/PWA icon sizes
+- Manual validation in iPhone Safari, installed home-screen mode, and a desktop browser
+
+### Non-Goals
+
+- Light mode or theme switching
+- Language selector
+- AI job-description analyzer
+- New analytics metrics or status history
+- Changes to rejection semantics
+- Backend/API redesign or database changes
+- Infrastructure, deployment, network, or monitoring changes
+- Native iOS application
+- Offline synchronization, service-worker caching, or push notifications
+- New UI, state-management, chart, or i18n dependencies unless later inspection demonstrates a real need
+
+### Definition of Done
+
+- [ ] The interface remains dark independently of the device theme
+- [ ] Normal iPhone widths require no horizontal scrolling
+- [ ] Important application information is scannable from collapsed cards
+- [ ] Full application details and actions remain accessible
+- [ ] Search, status filtering, and sorting compose correctly, including no-results/reset behavior and after CRUD mutations
+- [ ] Create, edit, and delete workflows remain comfortable on an iPhone
+- [ ] Forms and their actions remain usable with the iPhone keyboard open
+- [ ] Labels, contrast, touch targets, focus visibility, keyboard navigation, and expansion state are accessible; any chosen dialog interaction manages focus appropriately
+- [ ] German UI and German date/month formatting are preserved
+- [ ] Analytics retain their current-record semantics, cover all stored applications independently of list controls, and refresh after successful CRUD mutations
+- [ ] The favicon and home-screen icons display correctly, with appropriate manifest metadata and icon assets
+- [ ] The intended installed iPhone experience is verified over the existing private HTTPS access
+- [ ] Desktop usability and existing domain behavior are preserved
+- [ ] Frontend lint, production build, and relevant interaction validation pass
+- [ ] Documentation reflects the final UX and installation assets

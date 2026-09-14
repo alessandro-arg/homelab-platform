@@ -12,6 +12,7 @@ An internship application represents one application process with one company.
 | company_name | string | yes | Must not be empty |
 | position_title | string | no | Must not be empty if provided |
 | status | string | yes | Must use an allowed status |
+| rejection_reason | string or null | no | Must use an allowed rejection reason; non-null only when status is `rejected` |
 | application_date | date | yes | Must be a valid date |
 | contact_person | string | no | Must not be empty if provided |
 | contact_email | string | no | Must be a valid email address |
@@ -24,3 +25,22 @@ An internship application represents one application process with one company.
 - interview
 - rejected
 - offer
+
+## Rejection Reason
+
+`rejection_reason` is optional and nullable. A non-null reason is valid only when `status` is `rejected`.
+
+Supported stored values are:
+
+- `no_reason_provided`
+- `position_filled`
+- `experience_or_qualifications`
+- `location`
+- `language`
+- `salary_or_conditions`
+- `timing`
+- `other`
+
+A null or absent value means no structured reason is currently recorded. The explicit value `no_reason_provided` means the company supplied no reason. These cases remain distinct.
+
+Legacy records remain null unless explicitly updated; the migration does not infer or backfill rejection reasons.
