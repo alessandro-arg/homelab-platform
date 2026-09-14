@@ -30,11 +30,27 @@ Phase 7: Frontend Application UI - **Completed**
 
 Phase 8: Network Security and Private Remote Access - **Completed**
 
+Phase 9A: Domain Improvements and Rejection Tracking - **Completed**
+
+Phase 9B: Application Analytics API - **Completed**
+
+Phase 9C: Analytics Dashboard - **Completed**
+
+Phase 9D: German Frontend Localization - **Completed**
+
+Phase 10: AI Job Description Analyzer - **Deferred / Optional**
+
+Phase 11: Mobile-First Application Tracker UX - **Next**
+
+See the [Project Roadmap](docs/roadmap.md) for the Phase 10 deferral rationale and planned Phase 11 scope.
+
 The project currently provides:
 
 - A FastAPI REST API
 - An application domain model with Pydantic validation
 - Complete CRUD operations for internship applications
+- Optional structured rejection reasons with backend validation and PostgreSQL constraints
+- An application analytics API summarizing currently stored applications
 - PostgreSQL-backed persistent storage
 - SQLAlchemy-based database access
 - Alembic database migrations
@@ -43,6 +59,8 @@ The project currently provides:
 - Interactive OpenAPI documentation through Swagger UI
 - A React and TypeScript frontend built with Vite
 - Internship application overview, filtering, and CRUD workflows
+- An analytics dashboard with CSS-only visualizations, refreshed after successful create, update, and delete operations
+- German-only frontend presentation with German date and month formatting
 - A production multi-stage frontend Docker image
 - Unprivileged Nginx serving the production frontend
 - Nginx reverse proxying `/api/*` requests to FastAPI
@@ -88,6 +106,8 @@ The project currently provides:
 
 Application data is stored persistently in PostgreSQL and remains available when the FastAPI backend restarts.
 
+Application analytics summarize the current stored dataset. They do not represent historical status transitions or a conversion funnel.
+
 ## Available API Endpoints
 
 | Method   | Endpoint                         | Description                               |
@@ -98,7 +118,10 @@ Application data is stored persistently in PostgreSQL and remains available when
 | `GET`    | `/applications/{application_id}` | Retrieve one application                  |
 | `PUT`    | `/applications/{application_id}` | Replace an existing application           |
 | `DELETE` | `/applications/{application_id}` | Delete an application                     |
+| `GET`    | `/analytics/applications`        | Summarize currently stored applications   |
 | `GET`    | `/metrics`                       | Prometheus-compatible application metrics |
+
+The browser requests `/api/analytics/applications` through the existing Nginx proxy, which forwards it to the backend `/analytics/applications` route.
 
 ## Project Goals
 
@@ -130,6 +153,7 @@ homelab-platform/
 │   ├── src/
 │   │   └── internship_tracker/
 │   │       ├── __init__.py
+│   │       ├── analytics.py
 │   │       ├── config.py
 │   │       ├── database.py
 │   │       ├── database_models.py
@@ -141,6 +165,8 @@ homelab-platform/
 │   └── tests/
 │       ├── integration/
 │       │   └── test_postgresql.py
+│       ├── test_analytics.py
+│       ├── test_analytics_api.py
 │       ├── test_applications.py
 │       ├── test_config.py
 │       ├── test_database.py
@@ -871,7 +897,6 @@ docker compose -f ../compose.yaml rm -f postgres_test
 ## Current Limitations
 
 - Authentication and multiple users are not supported.
-- A frontend is not included yet.
 
 ## Documentation
 

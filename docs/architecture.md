@@ -63,7 +63,13 @@ The frontend provides:
 - Application creation
 - Application editing
 - Application deletion with confirmation
+- Conditional rejection-reason input and display for rejected applications
+- An analytics dashboard with CSS-only visualizations and readable labels/counts
+- Analytics refresh after successful create, update, and delete operations
+- German-only presentation with German status/rejection-reason labels and date/month formatting
 - Loading, empty, and API-error states
+
+German display labels are separate from the unchanged, language-neutral API/domain values.
 
 The frontend communicates with FastAPI through relative `/api/*` requests instead of depending directly on a backend host address.
 
@@ -194,6 +200,8 @@ The API models are defined in `models.py` using Pydantic.
 `ApplicationCreate` represents data supplied by an API client.
 
 `Application` extends the application data with the system-generated application ID.
+
+The optional, nullable `rejection_reason` field accepts the supported `RejectionReason` values: `no_reason_provided`, `position_filled`, `experience_or_qualifications`, `location`, `language`, `salary_or_conditions`, `timing`, and `other`. Pydantic validation permits a non-null reason only when status is `rejected`. See the [Domain Model](domain-model.md#rejection-reason) for the distinction between null and an explicitly recorded reason.
 
 The models validate:
 
@@ -1203,7 +1211,6 @@ This provides useful confidence without making the whole test suite dependent on
 
 Later phases may introduce:
 
-- A web frontend
 - Authentication
 - Kubernetes
 - Centralized logging
