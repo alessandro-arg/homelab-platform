@@ -137,6 +137,8 @@ button:disabled {
 
 .application-item {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 14px;
   padding: 16px;
   border: 1px solid var(--color-border);
@@ -149,17 +151,33 @@ button:disabled {
 }
 
 .application-main {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  min-width: 0;
   gap: 12px;
 }
 
 .application-title {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 5px;
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.application-item[data-expanded="false"] .application-company {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.application-item[data-expanded="false"] .application-position {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .application-title strong {
@@ -189,6 +207,13 @@ button:disabled {
   font-size: 0.8125rem;
 }
 
+.application-disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
 .status {
   display: inline-flex;
   align-items: center;
@@ -201,6 +226,14 @@ button:disabled {
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1;
+}
+
+.application-item .status {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .status-applied {
@@ -228,14 +261,42 @@ button:disabled {
 }
 
 .application-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: 0.875rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.application-details[hidden] {
+  display: none;
+}
+
+.application-detail-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+}
+
+.application-detail-field,
+.application-detail-field dd {
+  min-width: 0;
+}
+
+.application-detail-field dt {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.application-detail-field dd {
+  margin: 4px 0 0;
 }
 
 .application-details a {
@@ -243,18 +304,17 @@ button:disabled {
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  min-width: 0;
+  display: inline-block;
   max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
-.application-details p {
-  flex-basis: 100%;
-  margin: 4px 0 0;
-  color: var(--color-text-muted);
+.application-notes {
   white-space: pre-wrap;
+}
+
+.application-details .error-message {
+  margin: 0;
 }
 
 .application-form {
@@ -610,7 +670,6 @@ button:not(:disabled):active,
     padding: 40px 0 64px;
   }
 
-  .application-main,
   .application-footer {
     flex-direction: row;
     gap: 24px;

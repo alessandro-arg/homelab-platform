@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { rejectionReasonLabels, statusLabels } from "../types/application";
 import type { Application } from "../types/application";
 
@@ -22,10 +22,17 @@ function ApplicationItem({
   onEdit,
   onDelete,
 }: ApplicationItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const detailsId = useId();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const rejectionReason =
-    application.status === "rejected" ? application.rejection_reason : null;
+  const hasDetails = Boolean(
+    application.status === "rejected" ||
+    application.contact_person ||
+    application.contact_email ||
+    application.job_url ||
+    application.notes,
+  );
 
   async function handleDelete() {
     const confirmed = window.confirm(
@@ -53,11 +60,17 @@ function ApplicationItem({
   }
 
   return (
-    <li className="application-item">
+    <li className="application-item" data-expanded={isExpanded}>
       <div className="application-main">
         <div className="application-title">
-          <strong>{application.company_name}</strong>
-          <span>{application.position_title ?? "Keine Stellenbezeichnung"}</span>
+          <strong className="application-company">
+            {application.company_name}
+          </strong>
+          {application.position_title && (
+            <span className="application-position">
+              {application.position_title}
+            </span>
+          )}
         </div>
 
         <span className={`status status-${application.status}`}>
@@ -66,9 +79,82 @@ function ApplicationItem({
       </div>
 
       <div className="application-footer">
-        <span className="application-date">
+        <time
+          className="application-date"
+          dateTime={application.application_date}
+        >
           {formatDate(application.application_date)}
-        </span>
+        </time>
+
+        <button
+          type="button"
+          className="application-disclosure"
+          aria-expanded={isExpanded}
+          aria-controls={detailsId}
+          aria-label={`Details ${isExpanded ? "ausblenden" : "anzeigen"} für Bewerbung bei ${application.company_name}`}
+          onClick={() => setIsExpanded((current) => !current)}
+          disabled={isDeleting}
+        >
+          <span>{isExpanded ? "Details ausblenden" : "Details anzeigen"}</span>
+          <span aria-hidden="true">{isExpanded ? "▴" : "▾"}</span>
+        </button>
+      </div>
+
+      <div id={detailsId} className="application-details" hidden={!isExpanded}>
+        {hasDetails && (
+          <dl className="application-detail-fields">
+            {application.status === "rejected" && (
+              <div className="application-detail-field">
+                <dt>Absagegrund</dt>
+                <dd>
+                  {application.rejection_reason == null
+                    ? "Nicht erfasst"
+                    : rejectionReasonLabels[application.rejection_reason]}
+                </dd>
+              </div>
+            )}
+
+            {application.contact_person && (
+              <div className="application-detail-field">
+                <dt>Kontakt</dt>
+                <dd>{application.contact_person}</dd>
+              </div>
+            )}
+
+            {application.contact_email && (
+              <div className="application-detail-field">
+                <dt>E-Mail</dt>
+                <dd>
+                  <a href={`mailto:${application.contact_email}`}>
+                    {application.contact_email}
+                  </a>
+                </dd>
+              </div>
+            )}
+
+            {application.job_url && (
+              <div className="application-detail-field">
+                <dt>Stellenanzeige</dt>
+                <dd>
+                  <a
+                    href={application.job_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Link öffnen ↗
+                  </a>
+                </dd>
+              </div>
+            )}
+
+            {application.notes && (
+              <div className="application-detail-field">
+                <dt>Notizen</dt>
+                <dd className="application-notes">{application.notes}</dd>
+              </div>
+            )}
+          </dl>
+        )}
 
         <div className="application-actions">
           <button
@@ -88,43 +174,13 @@ function ApplicationItem({
             {isDeleting ? "Wird gelöscht…" : "Löschen"}
           </button>
         </div>
+
+        {deleteError && (
+          <p role="alert" className="error-message">
+            Bewerbung konnte nicht gelöscht werden. {deleteError}
+          </p>
+        )}
       </div>
-
-      {deleteError && (
-        <p role="alert" className="error-message">
-          Bewerbung konnte nicht gelöscht werden. {deleteError}
-        </p>
-      )}
-
-      {(rejectionReason ||
-        application.contact_person ||
-        application.contact_email ||
-        application.job_url ||
-        application.notes) && (
-        <div className="application-details">
-          {rejectionReason && (
-            <span>Absagegrund: {rejectionReasonLabels[rejectionReason]}</span>
-          )}
-
-          {application.contact_person && (
-            <span>Kontakt: {application.contact_person}</span>
-          )}
-
-          {application.contact_email && (
-            <a href={`mailto:${application.contact_email}`}>
-              {application.contact_email}
-            </a>
-          )}
-
-          {application.job_url && (
-            <a href={application.job_url} target="_blank" rel="noreferrer">
-              Stellenanzeige
-            </a>
-          )}
-
-          {application.notes && <p>{application.notes}</p>}
-        </div>
-      )}
     </li>
   );
 }
