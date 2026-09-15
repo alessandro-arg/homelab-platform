@@ -118,8 +118,6 @@ function App() {
         />
       )}
 
-      <ApplicationAnalyticsDashboard refreshVersion={analyticsRefreshVersion} />
-
       {!isLoading && !error && applications.length > 0 && (
         <ApplicationOverview
           applications={applications}
@@ -190,6 +188,8 @@ function App() {
           </ul>
         )}
       </section>
+
+      <ApplicationAnalyticsDashboard refreshVersion={analyticsRefreshVersion} />
     </main>
   );
 }

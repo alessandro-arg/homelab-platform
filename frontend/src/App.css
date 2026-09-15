@@ -1,25 +1,28 @@
 .app-shell {
-  width: min(1180px, calc(100% - 48px));
+  width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 56px 0 72px;
+  padding: 24px 0 40px;
+  overflow-wrap: anywhere;
 }
 
 .app-header {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 32px;
-  padding-bottom: 36px;
+  gap: 20px;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .app-header > div {
   max-width: 680px;
+  min-width: 0;
 }
 
 .eyebrow {
   margin: 0 0 10px;
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -29,7 +32,7 @@
 h1 {
   margin: 0;
   color: var(--color-text);
-  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.035em;
@@ -44,7 +47,10 @@ h1 {
 }
 
 button {
-  min-height: 40px;
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 9px 14px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
@@ -57,17 +63,7 @@ button {
     background-color 120ms ease,
     border-color 120ms ease,
     color 120ms ease,
-    box-shadow 120ms ease,
-    transform 120ms ease;
-}
-
-button:not(:disabled):hover {
-  border-color: #b8bec8;
-  background: var(--color-surface-muted);
-}
-
-button:not(:disabled):active {
-  transform: translateY(1px);
+    box-shadow 120ms ease;
 }
 
 button:not(:disabled) {
@@ -80,11 +76,12 @@ button:disabled {
 }
 
 .app-header .button-primary {
+  width: 100%;
   padding-inline: 18px;
 }
 
 .applications {
-  padding-top: 40px;
+  padding-top: 24px;
 }
 
 .applications h2 {
@@ -97,10 +94,10 @@ button:disabled {
 
 .empty-state {
   margin-top: 20px;
-  padding: 40px 28px;
+  padding: 28px 16px;
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-lg);
-  background: rgb(255 255 255 / 0.55);
+  background: var(--color-surface);
   text-align: center;
 }
 
@@ -122,10 +119,10 @@ button:disabled {
 .error-message {
   margin: 20px 0 0;
   padding: 12px 14px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-danger-border);
   border-radius: var(--radius-md);
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -141,7 +138,7 @@ button:disabled {
 .application-item {
   display: grid;
   gap: 14px;
-  padding: 18px 20px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -151,18 +148,12 @@ button:disabled {
     box-shadow 120ms ease;
 }
 
-.application-item:hover {
-  border-color: var(--color-border-strong);
-  box-shadow:
-    var(--shadow-sm),
-    0 4px 14px rgb(16 24 40 / 0.05);
-}
-
 .application-main {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px;
 }
 
 .application-title {
@@ -185,9 +176,10 @@ button:disabled {
 
 .application-footer {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px;
   padding-top: 14px;
   border-top: 1px solid var(--color-border);
 }
@@ -201,6 +193,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   width: fit-content;
+  max-width: 100%;
   min-height: 26px;
   padding: 4px 9px;
   border: 1px solid transparent;
@@ -211,27 +204,27 @@ button:disabled {
 }
 
 .status-applied {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: var(--color-applied-border);
+  background: var(--color-applied-surface);
+  color: var(--color-applied);
 }
 
 .status-interview {
-  border-color: #fde68a;
-  background: #fffbeb;
-  color: #a16207;
+  border-color: var(--color-interview-border);
+  background: var(--color-interview-surface);
+  color: var(--color-interview);
 }
 
 .status-rejected {
-  border-color: #fecaca;
-  background: #fef2f2;
-  color: #b91c1c;
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
 }
 
 .status-offer {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #15803d;
+  border-color: var(--color-offer-border);
+  background: var(--color-offer-surface);
+  color: var(--color-offer);
 }
 
 .application-details {
@@ -246,13 +239,15 @@ button:disabled {
 }
 
 .application-details a {
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-weight: 500;
-  text-decoration: none;
-}
-
-.application-details a:hover {
   text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .application-details p {
@@ -263,8 +258,8 @@ button:disabled {
 }
 
 .application-form {
-  margin-top: 32px;
-  padding: 28px;
+  margin-top: 24px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -272,7 +267,7 @@ button:disabled {
 }
 
 .form-heading {
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--color-border);
 }
@@ -294,14 +289,15 @@ button:disabled {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px 20px;
 }
 
 .form-grid label {
   display: grid;
   gap: 8px;
-  color: #344054;
+  min-width: 0;
+  color: var(--color-text);
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -310,30 +306,26 @@ button:disabled {
 .form-grid select,
 .form-grid textarea {
   width: 100%;
-  min-height: 42px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  font-size: 1rem;
   padding: 10px 12px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+  box-shadow: var(--shadow-sm);
   transition:
     border-color 120ms ease,
     box-shadow 120ms ease;
 }
 
-.form-grid input:hover,
-.form-grid select:hover,
-.form-grid textarea:hover {
-  border-color: #b8bec8;
-}
-
 .form-grid input:focus,
 .form-grid select:focus,
 .form-grid textarea:focus {
-  border-color: var(--color-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
 }
 
 .form-grid textarea {
@@ -348,6 +340,7 @@ button:disabled {
 
 .form-actions {
   display: flex;
+  flex-direction: column;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 28px;
@@ -357,42 +350,36 @@ button:disabled {
 
 .application-actions {
   display: flex;
+  flex-wrap: wrap;
+  width: 100%;
   justify-content: flex-end;
   gap: 8px;
   padding-top: 2px;
 }
 
 .application-actions button {
-  min-height: 36px;
+  flex: 1;
+  min-height: 44px;
   padding: 7px 12px;
   font-size: 0.875rem;
 }
 
 .button-danger {
-  border-color: #fecaca;
+  border-color: var(--color-danger-border);
   background: var(--color-surface);
   color: var(--color-danger);
-}
-
-.button-danger:not(:disabled):hover {
-  border-color: #fca5a5;
-  background: #fef2f2;
-  color: var(--color-danger-hover);
 }
 
 .button-primary {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: #ffffff;
-}
-
-.button-primary:not(:disabled):hover {
-  border-color: var(--color-primary-hover);
-  background: var(--color-primary-hover);
+  color: var(--color-on-primary);
 }
 
 .analytics-dashboard {
-  margin-top: 32px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
 }
 
 .analytics-dashboard h2,
@@ -411,7 +398,7 @@ button:disabled {
 
 .analytics-total,
 .analytics-panel {
-  padding: 20px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -478,7 +465,7 @@ button:disabled {
 
 .analytics-bar {
   height: 100%;
-  background: var(--color-primary);
+  background: var(--color-accent);
 }
 
 .analytics-missing-reason {
@@ -497,67 +484,42 @@ button:disabled {
 }
 
 .application-overview {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
 }
 
 .overview-card {
-  position: relative;
-  display: grid;
-  gap: 10px;
-  min-height: 104px;
-  padding: 16px 18px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
   text-align: left;
-  border-color: var(--color-border);
-  background: var(--color-surface);
-}
-
-.overview-card::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 3px;
-  background: transparent;
-  content: "";
-}
-
-.overview-card:hover {
-  border-color: var(--color-border-strong);
-  background: var(--color-surface);
-  box-shadow:
-    var(--shadow-sm),
-    0 4px 12px rgb(16 24 40 / 0.05);
 }
 
 .overview-card strong {
   color: var(--color-text);
-  font-size: 1.75rem;
+  font-size: 1rem;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .overview-label {
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 .overview-card-active {
-  border-color: #b9cdfb;
-  background: #f5f8ff;
-}
-
-.overview-card-active::before {
-  background: var(--color-primary);
+  border-color: var(--color-accent);
+  background: var(--color-applied-surface);
+  box-shadow: inset 0 -3px var(--color-accent);
 }
 
 .overview-card-active .overview-label {
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 
 .loading-state {
@@ -565,7 +527,7 @@ button:disabled {
   align-items: center;
   gap: 10px;
   margin-top: 20px;
-  padding: 18px 20px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -578,8 +540,8 @@ button:disabled {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
-  border: 2px solid #dbe3ef;
-  border-top-color: var(--color-primary);
+  border: 2px solid var(--color-border-strong);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: loading-spin 700ms linear infinite;
 }
@@ -590,54 +552,123 @@ button:disabled {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner {
-    animation: none;
+/* Keep hover feedback off touch-only devices. */
+@media (hover: hover) {
+  button:not(:disabled):hover {
+    border-color: var(--color-border-hover);
+    background: var(--color-surface-muted);
+  }
+
+  .button-primary:not(:disabled):hover {
+    border-color: var(--color-primary-hover);
+    background: var(--color-primary-hover);
+  }
+
+  .button-danger:not(:disabled):hover {
+    border-color: var(--color-danger-hover);
+    background: var(--color-danger-surface);
+    color: var(--color-danger-hover);
+  }
+
+  .overview-card-active:not(:disabled):hover {
+    border-color: var(--color-accent);
+    background: var(--color-applied-surface);
+  }
+
+  .application-item:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  .application-details a:hover {
+    color: var(--color-focus);
+  }
+
+  .form-grid input:hover,
+  .form-grid select:hover,
+  .form-grid textarea:hover {
+    border-color: var(--color-border-hover);
   }
 }
 
-@media (max-width: 640px) {
-  .app-shell {
-    width: min(100% - 32px, 1180px);
-    padding: 32px 0 48px;
-  }
+button:not(:disabled):active,
+.overview-card-active:not(:disabled):active {
+  background: var(--color-surface-pressed);
+}
 
-  .app-header {
-    flex-direction: column;
+.button-primary:not(:disabled):active {
+  border-color: var(--color-primary-pressed);
+  background: var(--color-primary-pressed);
+}
+
+.button-danger:not(:disabled):active {
+  background: var(--color-danger-pressed);
+}
+
+@media (min-width: 641px) {
+  .app-shell {
+    width: min(1180px, calc(100% - 48px));
+    padding: 40px 0 64px;
   }
 
   .application-main,
   .application-footer {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    gap: 24px;
+  }
+
+  .application-footer {
+    align-items: center;
   }
 
   .application-actions {
-    width: 100%;
+    width: auto;
   }
 
   .application-actions button {
-    flex: 1;
+    flex: none;
+  }
+
+  .application-form {
+    padding: 28px;
   }
 
   .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .full-width {
-    grid-column: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .form-actions {
-    flex-direction: column-reverse;
+    flex-direction: row;
   }
 
-  .form-actions button {
-    width: 100%;
+  .application-item,
+  .analytics-total,
+  .analytics-panel {
+    padding: 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .app-header {
+    flex-direction: row;
+    gap: 32px;
   }
 
-  .application-overview {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .app-header .button-primary {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .application-item,
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea {
+    transition: none;
+  }
+
+  .loading-spinner {
+    animation: none;
   }
 }
