@@ -92,6 +92,67 @@ button:disabled {
   letter-spacing: -0.015em;
 }
 
+.application-list-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.application-list-control {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.application-list-control label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.application-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.application-list-control input,
+.application-list-control select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.application-search button,
+.application-results button {
+  width: 100%;
+}
+
+.application-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.application-result-summary {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 .empty-state {
   margin-top: 20px;
   padding: 28px 16px;
@@ -665,6 +726,19 @@ button:not(:disabled):active,
 }
 
 @media (min-width: 641px) {
+  .application-list-controls {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .application-search input {
+    flex: 1 1 14rem;
+  }
+
+  .application-search button,
+  .application-results button {
+    width: auto;
+  }
+
   .app-shell {
     width: min(1180px, calc(100% - 48px));
     padding: 40px 0 64px;

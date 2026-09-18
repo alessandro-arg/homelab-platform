@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getApplications, deleteApplication } from "./api/applications";
 import type { Application } from "./types/application";
@@ -7,12 +7,46 @@ import CreateApplicationForm from "./components/CreateApplicationForm";
 import ApplicationItem from "./components/ApplicationItem";
 import EditApplicationForm from "./components/EditApplicationForm";
 import ApplicationAnalyticsDashboard from "./components/ApplicationAnalyticsDashboard";
+import ApplicationListControls, {
+  type ApplicationSortOption,
+} from "./components/ApplicationListControls";
 
 import ApplicationOverview, {
   type ApplicationFilter,
 } from "./components/ApplicationOverview";
 
 import "./App.css";
+
+const companyCollator = new Intl.Collator("de-DE", {
+  usage: "sort",
+  sensitivity: "base",
+});
+
+function compareApplications(
+  a: Application,
+  b: Application,
+  sortOption: ApplicationSortOption,
+) {
+  const companyOrder = companyCollator.compare(a.company_name, b.company_name);
+  const dateOrder =
+    a.application_date < b.application_date
+      ? -1
+      : a.application_date > b.application_date
+        ? 1
+        : 0;
+  const idOrder = a.id - b.id;
+
+  switch (sortOption) {
+    case "date-newest":
+      return -dateOrder || companyOrder || idOrder;
+    case "date-oldest":
+      return dateOrder || companyOrder || idOrder;
+    case "company-asc":
+      return companyOrder || -dateOrder || idOrder;
+    case "company-desc":
+      return -companyOrder || -dateOrder || idOrder;
+  }
+}
 
 function App() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -24,13 +58,50 @@ function App() {
   const [editingApplication, setEditingApplication] =
     useState<Application | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<ApplicationFilter>("all");
-  const filteredApplications =
+  const [sortOption, setSortOption] =
+    useState<ApplicationSortOption>("date-newest");
+  const resultSummaryRef = useRef<HTMLParagraphElement>(null);
+  const deletionFocusRef = useRef<Element | null>(null);
+
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("de-DE");
+  const searchMatches = applications.filter(
+    (application) =>
+      application.company_name
+        .toLocaleLowerCase("de-DE")
+        .includes(normalizedQuery) ||
+      (application.position_title ?? "")
+        .toLocaleLowerCase("de-DE")
+        .includes(normalizedQuery),
+  );
+  const statusMatches =
     activeFilter === "all"
-      ? applications
-      : applications.filter(
+      ? searchMatches
+      : searchMatches.filter(
           (application) => application.status === activeFilter,
         );
+  const visibleApplications = [...statusMatches].sort((a, b) =>
+    compareApplications(a, b, sortOption),
+  );
+  const canResetView =
+    searchQuery !== "" ||
+    activeFilter !== "all" ||
+    sortOption !== "date-newest";
+
+  useEffect(() => {
+    const previousFocus = deletionFocusRef.current;
+    deletionFocusRef.current = null;
+
+    if (
+      previousFocus &&
+      !previousFocus.isConnected &&
+      (document.activeElement === document.body ||
+        document.activeElement === document.documentElement)
+    ) {
+      resultSummaryRef.current?.focus();
+    }
+  }, [applications]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -142,28 +213,65 @@ function App() {
           </p>
         )}
 
+        {!isLoading && !error && (
+          <>
+            <ApplicationListControls
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              sortOption={sortOption}
+              onSortChange={setSortOption}
+            />
+            <div className="application-results">
+              <p
+                ref={resultSummaryRef}
+                className="application-result-summary"
+                role="status"
+                aria-atomic="true"
+                tabIndex={-1}
+              >
+                {visibleApplications.length} von {applications.length}{" "}
+                {applications.length === 1 ? "Bewerbung" : "Bewerbungen"}{" "}
+                angezeigt
+              </p>
+              {canResetView && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveFilter("all");
+                    setSortOption("date-newest");
+                    resultSummaryRef.current?.focus();
+                  }}
+                >
+                  Ansicht zurücksetzen
+                </button>
+              )}
+            </div>
+          </>
+        )}
+
         {!isLoading && !error && applications.length === 0 && (
           <div className="empty-state">
             <h3>Noch keine Bewerbungen</h3>
-            <p>
-              Nach dem Hinzufügen erscheint hier die erste Bewerbung.
-            </p>
+            <p>Nach dem Hinzufügen erscheint hier die erste Bewerbung.</p>
           </div>
         )}
 
         {!isLoading &&
           !error &&
           applications.length > 0 &&
-          filteredApplications.length === 0 && (
+          visibleApplications.length === 0 && (
             <div className="empty-state">
               <h3>Keine passenden Bewerbungen</h3>
-              <p>Es gibt noch keine Bewerbungen mit diesem Status.</p>
+              <p>
+                Die aktuelle Suche oder der Statusfilter ergibt keine Treffer.
+              </p>
             </div>
           )}
 
-        {!isLoading && !error && filteredApplications.length > 0 && (
+        {!isLoading && !error && visibleApplications.length > 0 && (
           <ul className="application-list">
-            {filteredApplications.map((application) => (
+            {visibleApplications.map((application) => (
               <ApplicationItem
                 key={application.id}
                 application={application}
@@ -172,7 +280,9 @@ function App() {
                   setEditingApplication(application);
                 }}
                 onDelete={async (application) => {
+                  const focusedElement = document.activeElement;
                   await deleteApplication(application.id);
+                  deletionFocusRef.current = focusedElement;
                   setAnalyticsRefreshVersion((current) => current + 1);
 
                   setApplications((current) =>
