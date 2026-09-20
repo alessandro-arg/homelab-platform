@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { rejectionReasonLabels, statusLabels } from "../types/application";
 import type {
@@ -63,6 +63,11 @@ function ApplicationForm({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    headingRef.current?.scrollIntoView({ block: "start" });
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,9 +107,16 @@ function ApplicationForm({
     <section className="application-form">
       <div className="form-heading">
         <div>
-          <h2>{title}</h2>
+          <h2 ref={headingRef}>{title}</h2>
           <p>{description}</p>
+          <p>
+            Unternehmen und Bewerbungsdatum sind Pflichtfelder. Weitere Angaben
+            sind optional.
+          </p>
         </div>
+        <button type="button" onClick={onCancel} disabled={isSubmitting}>
+          Abbrechen
+        </button>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -133,6 +145,18 @@ function ApplicationForm({
           </label>
 
           <label>
+            Bewerbungsdatum
+            <input
+              type="date"
+              value={form.application_date}
+              onChange={(event) =>
+                setForm({ ...form, application_date: event.target.value })
+              }
+              required
+            />
+          </label>
+
+          <label>
             Status
             <select
               value={form.status}
@@ -154,7 +178,7 @@ function ApplicationForm({
           </label>
 
           {form.status === "rejected" && (
-            <label>
+            <label className="full-width">
               Absagegrund (optional)
               <select
                 value={form.rejection_reason}
@@ -179,17 +203,7 @@ function ApplicationForm({
             </label>
           )}
 
-          <label>
-            Bewerbungsdatum
-            <input
-              type="date"
-              value={form.application_date}
-              onChange={(event) =>
-                setForm({ ...form, application_date: event.target.value })
-              }
-              required
-            />
-          </label>
+          <h3 className="form-section-heading full-width">Weitere Angaben</h3>
 
           <label>
             Kontaktperson
@@ -206,6 +220,8 @@ function ApplicationForm({
             E-Mail-Adresse der Kontaktperson
             <input
               type="email"
+              spellCheck={false}
+              autoCapitalize="none"
               value={form.contact_email}
               onChange={(event) =>
                 setForm({ ...form, contact_email: event.target.value })
@@ -217,11 +233,14 @@ function ApplicationForm({
             Link zur Stellenanzeige
             <input
               type="url"
+              spellCheck={false}
+              autoCapitalize="none"
               value={form.job_url}
               onChange={(event) =>
                 setForm({ ...form, job_url: event.target.value })
               }
             />
+            <span className="form-field-hint">Mit https://</span>
           </label>
 
           <label className="full-width">
@@ -244,16 +263,15 @@ function ApplicationForm({
         )}
 
         <div className="form-actions">
-          <button type="button" onClick={onCancel} disabled={isSubmitting}>
-            Abbrechen
-          </button>
-
           <button
             type="submit"
             className="button-primary"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Wird gespeichert…" : submitLabel}
+          </button>
+          <button type="button" onClick={onCancel} disabled={isSubmitting}>
+            Abbrechen
           </button>
         </div>
       </form>
