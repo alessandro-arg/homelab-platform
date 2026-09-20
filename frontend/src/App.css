@@ -388,12 +388,22 @@ button:disabled {
 }
 
 .form-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--color-border);
 }
 
+.form-heading > div {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
 .form-heading h2 {
+  scroll-margin-top: 24px;
   margin: 0;
   color: var(--color-text);
   font-size: 1.25rem;
@@ -412,6 +422,21 @@ button:disabled {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 22px 20px;
+}
+
+.form-section-heading {
+  margin: 2px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.form-field-hint {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 400;
 }
 
 .form-grid label {
