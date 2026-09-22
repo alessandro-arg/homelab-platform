@@ -467,6 +467,12 @@ button:disabled {
     box-shadow 120ms ease;
 }
 
+@supports (-webkit-touch-callout: none) {
+  .form-grid input[type="date"] {
+    padding-inline: 0;
+  }
+}
+
 .form-grid input:focus,
 .form-grid select:focus,
 .form-grid textarea:focus {
