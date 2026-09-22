@@ -40,9 +40,9 @@ Phase 9D: German Frontend Localization - **Completed**
 
 Phase 10: AI Job Description Analyzer - **Deferred / Optional**
 
-Phase 11: Mobile-First Application Tracker UX - **In Progress**
+Phase 11: Mobile-First Application Tracker UX - **Completed**
 
-See the [Project Roadmap](docs/roadmap.md) for the implemented Phase 11 work and the Phase 10 deferral rationale.
+See the [Project Roadmap](docs/roadmap.md) for the completed Phase 11 scope and the Phase 10 deferral rationale.
 
 The project currently provides:
 
