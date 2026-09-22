@@ -931,30 +931,29 @@ The tracker is currently used mainly for initiative applications, which often ha
 
 ### Revisit Condition
 
-Reconsider this feature when analyzing real job descriptions becomes a recurring need. Phase 11 is the next planned implementation.
+Reconsider this feature when analyzing real job descriptions becomes a recurring need.
 
-## Phase 11: Mobile-First Application Tracker UX - **Next**
+## Phase 11: Mobile-First Application Tracker UX - **In Progress**
 
 ### Goal
 
 Make the tracker comfortable for frequent iPhone use, including use from the home screen, while preserving desktop usability, German UI, accessibility, existing domain behavior, and analytics semantics.
 
-### Planned Deliverables
+### Implemented Deliverables
 
 - Mobile-first layout with clearer visual hierarchy and touch-friendly controls
 - Dark-only UI with no light mode or theme toggle
-- Easier-to-scan application cards, with expandable/accordion cards as the preferred direction
+- Easier-to-scan application cards with independently expandable details
+- Search by company and position, composed with the existing status filter
+- Sorting by application date or company, with newest application date as the default
 - Collapsed cards showing company, optional position, current status, and application date
 - Expanded cards exposing complete details and actions
-- Application search, initially covering company and position
-- Review of search/filter/sort architecture so the controls compose predictably, with status filtering retained and improved where useful
-- Sorting with an explicit default; proposed initial choices are newest first, oldest first, company A–Z, and company Z–A
 - Useful no-results feedback and reset behavior
 - Improved mobile create/edit UX, including form placement, field grouping, validation feedback, and save/cancel interaction
-- Review of the form interaction without requiring a dialog/modal in advance
+- Inline mobile create/edit workflow retained and improved without introducing a dialog/modal
 - Usable forms and actions with the iPhone keyboard open
-- Custom application icon, favicon, and `apple-touch-icon`
-- Add/update web-app manifest metadata where needed and provide appropriate home-screen/PWA icon sizes
+- Custom application icon, browser favicon, and Apple touch icon
+- Web app manifest and Apple Home Screen metadata for standalone-style launching
 - Manual validation in iPhone Safari, installed home-screen mode, and a desktop browser
 
 ### Non-Goals
@@ -972,18 +971,18 @@ Make the tracker comfortable for frequent iPhone use, including use from the hom
 
 ### Definition of Done
 
-- [ ] The interface remains dark independently of the device theme
+- [x] The interface remains dark independently of the device theme
+- [x] Important application information is scannable from collapsed cards
+- [x] Full application details and actions remain accessible
+- [x] Search, status filtering, and sorting compose correctly, including no-results/reset behavior and after CRUD mutations
+- [x] German UI and German date/month formatting are preserved
+- [x] Analytics retain their current-record semantics, cover all stored applications independently of list controls, and refresh after successful CRUD mutations
+- [x] The favicon and home-screen icons display correctly, with appropriate manifest metadata and icon assets
+- [x] Desktop usability and existing domain behavior are preserved
+- [x] Frontend lint, production build, and relevant interaction validation pass
+- [x] Labels, contrast, touch targets, focus visibility, keyboard navigation, and expansion controls remain usable
 - [ ] Normal iPhone widths require no horizontal scrolling
-- [ ] Important application information is scannable from collapsed cards
-- [ ] Full application details and actions remain accessible
-- [ ] Search, status filtering, and sorting compose correctly, including no-results/reset behavior and after CRUD mutations
 - [ ] Create, edit, and delete workflows remain comfortable on an iPhone
-- [ ] Forms and their actions remain usable with the iPhone keyboard open
-- [ ] Labels, contrast, touch targets, focus visibility, keyboard navigation, and expansion state are accessible; any chosen dialog interaction manages focus appropriately
-- [ ] German UI and German date/month formatting are preserved
-- [ ] Analytics retain their current-record semantics, cover all stored applications independently of list controls, and refresh after successful CRUD mutations
-- [ ] The favicon and home-screen icons display correctly, with appropriate manifest metadata and icon assets
-- [ ] The intended installed iPhone experience is verified over the existing private HTTPS access
-- [ ] Desktop usability and existing domain behavior are preserved
-- [ ] Frontend lint, production build, and relevant interaction validation pass
+- [x] Forms and their actions remain usable with the iPhone keyboard open
+- [x] The intended installed iPhone experience is verified over the existing private HTTPS access
 - [ ] Documentation reflects the final UX and installation assets
