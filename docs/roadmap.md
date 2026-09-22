@@ -933,7 +933,7 @@ The tracker is currently used mainly for initiative applications, which often ha
 
 Reconsider this feature when analyzing real job descriptions becomes a recurring need.
 
-## Phase 11: Mobile-First Application Tracker UX - **In Progress**
+## Phase 11: Mobile-First Application Tracker UX - **Completed**
 
 ### Goal
 
@@ -955,6 +955,7 @@ Make the tracker comfortable for frequent iPhone use, including use from the hom
 - Custom application icon, browser favicon, and Apple touch icon
 - Web app manifest and Apple Home Screen metadata for standalone-style launching
 - Manual validation in iPhone Safari, installed home-screen mode, and a desktop browser
+- iOS/WebKit date-input overflow fixed and verified on a real iPhone
 
 ### Non-Goals
 
@@ -981,8 +982,8 @@ Make the tracker comfortable for frequent iPhone use, including use from the hom
 - [x] Desktop usability and existing domain behavior are preserved
 - [x] Frontend lint, production build, and relevant interaction validation pass
 - [x] Labels, contrast, touch targets, focus visibility, keyboard navigation, and expansion controls remain usable
-- [ ] Normal iPhone widths require no horizontal scrolling
-- [ ] Create, edit, and delete workflows remain comfortable on an iPhone
+- [x] Normal iPhone widths require no horizontal scrolling
+- [x] Create, edit, and delete workflows remain comfortable on an iPhone
 - [x] Forms and their actions remain usable with the iPhone keyboard open
 - [x] The intended installed iPhone experience is verified over the existing private HTTPS access
-- [ ] Documentation reflects the final UX and installation assets
+- [x] Documentation reflects the final UX and installation assets
