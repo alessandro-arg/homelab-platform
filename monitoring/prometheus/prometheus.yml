@@ -29,3 +29,13 @@ scrape_configs:
     static_configs:
       - targets:
           - cadvisor:8080
+
+  - job_name: vm-docker-01-node
+    static_configs:
+      - targets:
+          - 192.168.188.21:9100
+
+  - job_name: vm-docker-01-cadvisor
+    static_configs:
+      - targets:
+          - 192.168.188.21:8081
