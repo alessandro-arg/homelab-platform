@@ -10,6 +10,7 @@ import ApplicationAnalyticsDashboard from "./components/ApplicationAnalyticsDash
 import ApplicationListControls, {
   type ApplicationSortOption,
 } from "./components/ApplicationListControls";
+import ApplicationPagination from "./components/ApplicationPagination";
 
 import ApplicationOverview, {
   type ApplicationFilter,
@@ -17,10 +18,42 @@ import ApplicationOverview, {
 
 import "./App.css";
 
+const APPLICATIONS_PER_PAGE = 5;
+
 const companyCollator = new Intl.Collator("de-DE", {
   usage: "sort",
   sensitivity: "base",
 });
+
+function normalizeSearchQuery(query: string) {
+  return query.trim().toLocaleLowerCase("de-DE");
+}
+
+function formatResultSummary(
+  firstResult: number,
+  lastResult: number,
+  matchingCount: number,
+  totalCount: number,
+) {
+  if (totalCount === 0) {
+    return "0 Bewerbungen";
+  }
+
+  const totalLabel = totalCount === 1 ? "Bewerbung" : "Bewerbungen";
+  if (matchingCount === 0) {
+    return `0 von ${totalCount} ${totalLabel}`;
+  }
+
+  const range =
+    firstResult === lastResult ? `${firstResult}` : `${firstResult}–${lastResult}`;
+  if (matchingCount === totalCount) {
+    return `${range} von ${totalCount} ${totalLabel}`;
+  }
+
+  const matchingLabel =
+    matchingCount === 1 ? "passenden Bewerbung" : "passenden Bewerbungen";
+  return `${range} von ${matchingCount} ${matchingLabel} (${totalCount} insgesamt)`;
+}
 
 function compareApplications(
   a: Application,
@@ -62,10 +95,11 @@ function App() {
   const [activeFilter, setActiveFilter] = useState<ApplicationFilter>("all");
   const [sortOption, setSortOption] =
     useState<ApplicationSortOption>("date-newest");
+  const [currentPage, setCurrentPage] = useState(1);
   const resultSummaryRef = useRef<HTMLParagraphElement>(null);
   const deletionFocusRef = useRef<Element | null>(null);
 
-  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("de-DE");
+  const normalizedQuery = normalizeSearchQuery(searchQuery);
   const searchMatches = applications.filter(
     (application) =>
       application.company_name
@@ -81,9 +115,21 @@ function App() {
       : searchMatches.filter(
           (application) => application.status === activeFilter,
         );
-  const visibleApplications = [...statusMatches].sort((a, b) =>
+  const sortedApplications = [...statusMatches].sort((a, b) =>
     compareApplications(a, b, sortOption),
   );
+  const matchingCount = sortedApplications.length;
+  const pageCount = Math.ceil(matchingCount / APPLICATIONS_PER_PAGE);
+  const validPage = Math.min(currentPage, Math.max(1, pageCount));
+
+  // Keep a page that disappeared after a mutation from resurfacing on later growth.
+  if (currentPage !== validPage) {
+    setCurrentPage(validPage);
+  }
+
+  const pageStart = (validPage - 1) * APPLICATIONS_PER_PAGE;
+  const pageEnd = Math.min(pageStart + APPLICATIONS_PER_PAGE, matchingCount);
+  const pageApplications = sortedApplications.slice(pageStart, pageEnd);
   const canResetView =
     searchQuery !== "" ||
     activeFilter !== "all" ||
@@ -193,7 +239,12 @@ function App() {
         <ApplicationOverview
           applications={applications}
           activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
+          onFilterChange={(filter) => {
+            if (filter !== activeFilter) {
+              setActiveFilter(filter);
+              setCurrentPage(1);
+            }
+          }}
         />
       )}
 
@@ -217,9 +268,19 @@ function App() {
           <>
             <ApplicationListControls
               searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
+              onSearchChange={(query) => {
+                setSearchQuery(query);
+                if (normalizeSearchQuery(query) !== normalizedQuery) {
+                  setCurrentPage(1);
+                }
+              }}
               sortOption={sortOption}
-              onSortChange={setSortOption}
+              onSortChange={(option) => {
+                if (option !== sortOption) {
+                  setSortOption(option);
+                  setCurrentPage(1);
+                }
+              }}
             />
             <div className="application-results">
               <p
@@ -229,9 +290,12 @@ function App() {
                 aria-atomic="true"
                 tabIndex={-1}
               >
-                {visibleApplications.length} von {applications.length}{" "}
-                {applications.length === 1 ? "Bewerbung" : "Bewerbungen"}{" "}
-                angezeigt
+                {formatResultSummary(
+                  pageStart + 1,
+                  pageEnd,
+                  matchingCount,
+                  applications.length,
+                )}
               </p>
               {canResetView && (
                 <button
@@ -240,6 +304,7 @@ function App() {
                     setSearchQuery("");
                     setActiveFilter("all");
                     setSortOption("date-newest");
+                    setCurrentPage(1);
                     resultSummaryRef.current?.focus();
                   }}
                 >
@@ -260,7 +325,7 @@ function App() {
         {!isLoading &&
           !error &&
           applications.length > 0 &&
-          visibleApplications.length === 0 && (
+          matchingCount === 0 && (
             <div className="empty-state">
               <h3>Keine passenden Bewerbungen</h3>
               <p>
@@ -269,9 +334,9 @@ function App() {
             </div>
           )}
 
-        {!isLoading && !error && visibleApplications.length > 0 && (
+        {!isLoading && !error && matchingCount > 0 && (
           <ul className="application-list">
-            {visibleApplications.map((application) => (
+            {pageApplications.map((application) => (
               <ApplicationItem
                 key={application.id}
                 application={application}
@@ -296,6 +361,15 @@ function App() {
               />
             ))}
           </ul>
+        )}
+
+        {!isLoading && !error && (
+          <ApplicationPagination
+            currentPage={validPage}
+            pageCount={pageCount}
+            onPageChange={setCurrentPage}
+            fallbackFocusRef={resultSummaryRef}
+          />
         )}
       </section>
 
